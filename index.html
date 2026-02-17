@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { 
+            background: #000; 
+            color: #ffd700; 
+            text-align: center; 
+            font-family: 'Arial', sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+            height: 100vh;
+        }
+
+        /* Летающие монетки */
+        .coin {
+            position: absolute;
+            color: #ffd700;
+            font-size: 20px;
+            user-select: none;
+            z-index: -1;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        .container { position: relative; z-index: 1; padding-top: 50px; }
+        
+        .slot-box { 
+            display: inline-block; 
+            padding: 20px; 
+            border: 4px solid #ffd700; 
+            border-radius: 20px; 
+            background: rgba(0,0,0,0.8); 
+            box-shadow: 0 0 30px #ffd700; 
+        }
+
+        .slots { font-size: 60px; margin: 20px 0; }
+        .balance { font-size: 24px; margin-bottom: 20px; font-weight: bold; }
+        
+        .btn { 
+            background: linear-gradient(#ffd700, #b8860b); 
+            color: #000; 
+            border: none; 
+            padding: 12px 30px; 
+            font-size: 20px; 
+            font-weight: bold; 
+            border-radius: 50px; 
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:active { transform: scale(0.9); }
+        
+        .promo-btn { background: #333; color: #ffd700; border: 1px solid #ffd700; }
+    </style>
+</head>
+<body>
+    <div id="coins-container"></div>
+
+    <div class="container">
+        <h1>GORILLA GOLD</h1>
+        <div class="balance">Баланс: <span id="balance">100</span> G</div>
+
+        <div class="slot-box">
+            <div class="slots" id="display">🎰 🎰 🎰</div>
+            <button class="btn" onclick="spin()">КРУТИТЬ (10 G)</button>
+        </div>
+
+        <br><br>
+        <button class="btn promo-btn" onclick="openPromo()">ПРОМОКОД</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let balance = 100;
+        let usedPromos = [];
+
+        // Создание летающих монет
+        function createCoin() {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.innerText = 'G';
+            coin.style.left = Math.random() * 100 + 'vw';
+            coin.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            coin.style.opacity = Math.random();
+            document.getElementById('coins-container').appendChild(coin);
+            setTimeout(() => coin.remove(), 5000);
+        }
+        setInterval(createCoin, 300);
+
+        function spin() {
+            if (balance < 10) {
+                tg.showAlert("Недостаточно G!");
+                return;
+            }
+            balance -= 10;
+            updateUI();
+
+            const symbols = ['💎', '7️⃣', '🍒', '🍀', '💰'];
+            const res = [
+                symbols[Math.floor(Math.random()*5)],
+                symbols[Math.floor(Math.random()*5)],
+                symbols[Math.floor(Math.random()*5)]
+            ];
+            
+            document.getElementById('display').innerText = res.join(' ');
+
+            if (res[0] === res[1] && res[1] === res[2]) {
+                balance += 100;
+                tg.showAlert("JACKPOT! +100 G 🎉");
+                updateUI();
+            }
+        }
+
+        function openPromo() {
+            let code = prompt("Введите промокод:");
+            if (!code) return;
+            
+            code = code.toUpperCase();
+            if (usedPromos.includes(code)) {
+                tg.showAlert("Вы уже использовали этот код!");
+            } else if (code === "START" || code === "GORILLA") {
+                balance += 50;
+                usedPromos.push(code);
+                tg.showAlert("Промокод принят! +50 G");
+                updateUI();
+            } else {
+                tg.showAlert("Неверный промокод!");
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('balance').innerText = balance;
+        }
+    </script>
+</body>
+</html>
