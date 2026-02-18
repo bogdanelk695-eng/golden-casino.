@@ -5,281 +5,143 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); --bg-menu: #0f0f0f; --txt-menu: #fff; }
-        * { -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
-        body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+        :root { --mc: #ffd700; --bg: #000; --card: #111; }
+        body { background: var(--bg); color: var(--mc); font-family: sans-serif; margin: 0; text-align: center; }
+        .header { padding: 15px; font-weight: 900; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .bal-display { font-size: 28px; font-weight: bold; margin: 15px 0; }
         
-        /* ЧАСТИЦЫ */
-        .particle { position: absolute; top: -20px; user-select: none; z-index: -1; animation: fall linear infinite; font-size: 22px; }
-        @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
-
-        /* ЗАСТАВКА */
-        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.8s ease; }
-        .loader-box { border: 3px solid var(--mc); padding: 30px; border-radius: 15px; background: rgba(0,0,0,0.8); box-shadow: 0 0 30px var(--sh); animation: pulse 2s infinite; font-weight: 900; letter-spacing: 5px; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        #loading-screen.fade-out { opacity: 0; pointer-events: none; }
-
-        /* ВЕРХНЯЯ ПАНЕЛЬ */
-        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; }
-        .menu-btn, .sett-btn { font-size: 32px; cursor: pointer; color: var(--mc); filter: drop-shadow(0 0 5px var(--sh)); }
+        /* Лобби */
+        .lobby-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+        .game-btn { background: var(--card); border: 2px solid var(--mc); border-radius: 15px; padding: 20px 10px; cursor: pointer; }
         
-        /* ПАНЕЛИ */
-        .side-panel { position: fixed; top: 0; width: 280px; height: 100%; background: var(--bg-menu); color: var(--txt-menu); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200; padding: 20px; text-align: left; box-shadow: 0 0 25px #000; overflow-y: auto; }
-        #menu { left: -300px; border-right: 2px solid var(--mc); }
-        #sett { right: -300px; border-left: 2px solid var(--mc); }
-        .open#menu { left: 0; }
-        .open#sett { right: 0; }
-
-        /* НИК И КНОПКИ */
-        .name-wrapper { border: 2px solid var(--mc); padding: 12px; border-radius: 12px; margin: 40px 0 20px 0; text-align: center; box-shadow: inset 0 0 15px var(--sh); }
-        .item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; transition: 0.2s; }
-        .sub-box { display: none; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 15px; border: 1px dashed var(--sh); }
-        .sub-btn { padding: 12px; color: #ccc; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-        /* КРИПТО КАРТА */
-        .crypto-card { background: #111; border: 1px solid var(--mc); padding: 12px; border-radius: 10px; margin-top: 10px; text-align: center; display: none; }
-        .wallet-text { font-size: 11px; word-break: break-all; color: #fff; margin-bottom: 10px; display: block; background: #000; padding: 5px; border-radius: 5px; }
+        /* Игры */
+        .screen { display: none; padding: 20px; }
+        .active { display: block; }
+        .slot-box { background: var(--card); border: 3px solid var(--mc); border-radius: 20px; padding: 20px; margin-top: 20px; }
+        .slots { font-size: 50px; margin-bottom: 20px; }
         
-        /* ВЫВОД */
-        .w-input { background: #000; border: 1px solid var(--mc); color: #fff; width: 100%; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; }
+        /* Колесо */
+        .wheel-wrap { position: relative; width: 220px; height: 220px; margin: 20px auto; border: 6px solid var(--mc); border-radius: 50%; transition: transform 3s cubic-bezier(0.1, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .pointer { color: #ff3333; font-size: 30px; margin-bottom: -15px; }
 
-        /* ИГРА */
-        .main { padding-top: 80px; height: 100%; display: flex; flex-direction: column; justify-content: center; }
-        .slot-machine { background: #050505; border: 4px solid var(--mc); border-radius: 40px; padding: 30px; display: inline-block; box-shadow: 0 0 50px var(--sh); margin: 0 auto; position: relative; }
-        .slots { font-size: 70px; margin-bottom: 20px; min-height: 90px; letter-spacing: 5px; }
-        
-        .bet-input { background: #000; border: 2px solid var(--mc); color: #fff; padding: 12px; border-radius: 12px; width: 120px; font-size: 20px; text-align: center; margin-bottom: 15px; box-shadow: 0 0 10px var(--sh); }
-        .b-btn { background: #111; border: 1px solid var(--mc); color: var(--mc); padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .b-btn.active { background: var(--mc); color: #000; box-shadow: 0 0 15px var(--sh); }
-        .play-btn { background: var(--mc); color: #000; border: none; padding: 20px 70px; font-size: 24px; font-weight: 900; border-radius: 25px; cursor: pointer; text-transform: uppercase; transition: 0.1s; }
-        .play-btn:active { transform: scale(0.95); }
+        /* Меню и Кнопки */
+        .btn { background: var(--mc); color: #000; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; margin-top: 10px; }
+        .side-menu { position: fixed; top: 0; left: -100%; width: 250px; height: 100%; background: #0a0a0a; z-index: 100; transition: 0.3s; text-align: left; padding: 20px; border-right: 1px solid var(--mc); }
+        .menu-open { left: 0; }
+        .input-alt { background: #000; border: 1px solid var(--mc); color: #fff; width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; box-sizing: border-box; }
 
-        /* УВЕДОМЛЕНИЯ */
-        #msg { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 14px 30px; border-radius: 40px; font-weight: 900; display: none; z-index: 5000; box-shadow: 0 5px 25px rgba(0,0,0,0.8); white-space: nowrap; }
-
-        /* СЕТКА */
-        .grid-select { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .color-sq { width: 100%; aspect-ratio: 1; border-radius: 10px; border: 2px solid #fff; cursor: pointer; }
-        .eff-sq { background: #222; border-radius: 10px; padding: 12px; text-align: center; font-size: 26px; cursor: pointer; border: 1px solid #444; }
+        /* Админка */
+        #adm-win { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; border: 2px solid var(--mc); padding: 20px; z-index: 1000; border-radius: 15px; }
     </style>
 </head>
 <body>
-    <div id="loading-screen"><div class="loader-box">GOLDEN BOT</div></div>
-    <div id="msg"></div>
 
     <div class="header">
-        <div class="menu-btn" onclick="toggleP('menu')">☰</div>
-        <div class="sett-btn" onclick="toggleP('sett')">⚙️</div>
+        <div onclick="toggleMenu()">☰ МЕНЮ</div>
+        <div onclick="admCheck()" id="adm-trigger">GOLDEN CASINO</div>
+        <div style="width: 50px;"></div>
     </div>
 
-    <div id="menu" class="side-panel">
-        <div class="name-wrapper"><h2 id="name-tag">Игрок</h2></div>
+    <div class="bal-display">💰 <span id="bal">10.00</span> UAH</div>
+
+    <div id="scr-lobby" class="screen active">
+        <div class="lobby-grid">
+            <div class="game-btn" onclick="go('scr-slot')">
+                <div style="font-size:30px;">🎰</div>
+                <b>БАНКОМАТ</b>
+            </div>
+            <div class="game-btn" onclick="go('scr-wheel')">
+                <div style="font-size:30px;">🎡</div>
+                <b>КОЛЕСО</b>
+            </div>
+        </div>
+        <button class="btn" style="width:90%;" onclick="toggleMenu()">👤 ПРОФИЛЬ / ПОПОЛНИТЬ</button>
+    </div>
+
+    <div id="scr-slot" class="screen">
+        <button onclick="go('scr-lobby')">← В ЛОББИ</button>
+        <div class="slot-box">
+            <div class="slots" id="res-slot">🎰🎰🎰</div>
+            <p>Ставка: 2 UAH</p>
+            <button class="btn" onclick="playSlot()">КРУТИТЬ</button>
+        </div>
+    </div>
+
+    <div id="scr-wheel" class="screen">
+        <button onclick="go('scr-lobby')">← В ЛОББИ</button>
+        <div class="pointer">▼</div>
+        <div id="wheel-obj" class="wheel-wrap">FORTUNE</div>
+        <p>Ставка: 5 UAH</p>
+        <button class="btn" onclick="playWheel()">КРУТИТЬ (x2 или 0)</button>
+    </div>
+
+    <div id="side-menu" class="side-menu">
+        <h3 style="color:var(--mc);">ЛИЧНЫЙ КАБИНЕТ</h3>
+        <hr border="1" color="#222">
+        <p><b>ПОПОЛНИТЬ КРИПТОЙ</b></p>
+        <small>Переведи на TON: UQBXsDXoF...3L</small>
+        <input type="text" id="chk-link" class="input-alt" placeholder="Ссылка на чек">
+        <button class="btn" onclick="alert('Чек отправлен!')">ОТПРАВИТЬ ЧЕК</button>
         
-        <div class="item" onclick="showSub('p-items')">👤 МОЙ ПРОФИЛЬ</div>
-        <div id="p-items" class="sub-box">
-            <div class="sub-btn" onclick="showSub('dep-list')">💳 ПОПОЛНИТЬ</div>
-            <div id="dep-list" class="sub-box">
-                <div class="sub-btn" onclick="toggleCrypto()">Криптовалюта (TON)</div>
-                <div id="crypto-window" class="crypto-card">
-                    <span class="wallet-text">UQBXsDXoFMFD3752_K-87KOPztj5KbTrQq9irD32bUEAMQ3L</span>
-                    <button onclick="copyWallet()" style="width:100%; background:var(--mc); border:none; border-radius:8px; padding:10px; font-weight:bold; cursor:pointer;">СКОПИРОВАТЬ АДРЕС</button>
-                </div>
-                <div class="sub-btn" onclick="msg('Карты временно недоступны')">Банковская карта</div>
-            </div>
-            
-            <div class="sub-btn" onclick="showSub('withdraw-area')">💰 ВЫВОД СРЕДСТВ</div>
-            <div id="withdraw-area" class="sub-box">
-                <input type="number" id="w-amount" class="w-input" placeholder="Сумма (мин. 200)">
-                <input type="text" id="w-dest" class="w-input" placeholder="Номер карты / кошелек">
-                <button onclick="requestWithdraw()" style="width:100%; background:var(--mc); color:#000; border:none; padding:15px; border-radius:10px; font-weight:bold; cursor:pointer;">СОЗДАТЬ ЗАЯВКУ</button>
-            </div>
-
-            <div class="sub-btn" onclick="showSub('v-items')">💱 СМЕНИТЬ ВАЛЮТУ</div>
-            <div id="v-items" class="sub-box">
-                <div class="sub-btn" onclick="setV('RUB')">₽ Российский рубль (RUB)</div>
-                <div class="sub-btn" onclick="setV('UAH')">₴ Украинская гривна (UAH)</div>
-                <div class="sub-btn" onclick="setV('TON')">💎 Toncoin (TON)</div>
-            </div>
-            <div class="sub-btn" onclick="promo()">🎁 АКТИВИРОВАТЬ ПРОМОКОД</div>
-            <div class="sub-btn" onclick="openSupport()" style="color:var(--mc); font-weight:bold; border-top: 1px solid var(--sh); margin-top:5px;">🆘 СЛУЖБА ПОДДЕРЖКИ</div>
-        </div>
-
-        <div class="item" onclick="showSub('color-items')">🎨 ДИЗАЙН И ЦВЕТА</div>
-        <div id="color-items" class="sub-box">
-            <div class="grid-select">
-                <div onclick="setT('#ffd700')" class="color-sq" style="background:#ffd700;"></div>
-                <div onclick="setT('#ff3333')" class="color-sq" style="background:#ff3333;"></div>
-                <div onclick="setT('#22ff22')" class="color-sq" style="background:#22ff22;"></div>
-                <div onclick="setT('#3388ff')" class="color-sq" style="background:#3388ff;"></div>
-                <div onclick="setT('#ffffff')" class="color-sq" style="background:#ffffff;"></div>
-                <div onclick="setT('#a020f0')" class="color-sq" style="background:#a020f0;"></div>
-            </div>
-        </div>
-
-        <div class="item" onclick="showSub('eff-items')">✨ СПЕЦЭФФЕКТЫ</div>
-        <div id="eff-items" class="sub-box">
-            <div class="grid-select">
-                <div onclick="setE('💰')" class="eff-sq">💰</div>
-                <div onclick="setE('💎')" class="eff-sq">💎</div>
-                <div onclick="setE('🌸')" class="eff-sq">🌸</div>
-                <div onclick="setE('❄️')" class="eff-sq">❄️</div>
-                <div onclick="setE('🍀')" class="eff-sq">🍀</div>
-                <div onclick="setE('🔥')" class="eff-sq">🔥</div>
-            </div>
-        </div>
-
-        <div class="item" onclick="showSub('menu-theme')">🌓 ТЕМА ИНТЕРФЕЙСА</div>
-        <div id="menu-theme" class="sub-box">
-            <div class="sub-btn" onclick="setMTheme('#0f0f0f', '#fff')">⚫ ГЛУБОКИЙ ЧЕРНЫЙ</div>
-            <div class="sub-btn" onclick="setMTheme('#ffffff', '#000')">⚪ ЧИСТЫЙ БЕЛЫЙ</div>
-        </div>
-
-        <button onclick="toggleP('menu')" class="item" style="margin-top:20px; width:100%; background:var(--mc); color:#000; border:none; height:50px;">ОК</button>
+        <p style="margin-top:20px;"><b>ВЫВОД</b></p>
+        <input type="number" class="input-alt" placeholder="Сумма">
+        <button class="btn" style="background:#333; color:#fff;">ВЫВЕСТИ</button>
+        
+        <button class="btn" style="margin-top:40px; background:red;" onclick="toggleMenu()">ЗАКРЫТЬ</button>
     </div>
 
-    <div id="sett" class="side-panel">
-        <h2 style="margin-top:40px;">НАСТРОЙКИ</h2>
-        <div class="item">ЯЗЫК: 🇷🇺 РУССКИЙ</div>
-        <div class="item">ЗВУК: 🔊 ВКЛЮЧЕН</div>
-        <button onclick="toggleP('sett')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">ВЕРНУТЬСЯ</button>
-    </div>
-
-    <div class="main">
-        <div>
-            <div style="font-size:14px; opacity:0.6; letter-spacing:3px; font-weight:bold;">ВАШ БАЛАНС</div>
-            <div style="font-size:48px; font-weight:900; margin-bottom:25px;"><span id="bal">10.00</span> <span id="v-sym" style="font-size:20px;">UAH</span></div>
-        </div>
-        <div class="slot-machine">
-            <div class="slots" id="scr">🎰🎰🎰</div>
-            <input type="number" id="bet-val" class="bet-input" value="2">
-            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-                <div class="b-btn active" id="x1" onclick="setX(1)">X1</div>
-                <div class="b-btn" id="x2" onclick="setX(2)">X2</div>
-                <div class="b-btn" id="x3" onclick="setX(3)">X3</div>
-            </div>
-            <button class="play-btn" id="p-btn" onclick="play()">КРУТИТЬ</button>
-        </div>
+    <div id="adm-win">
+        <h4>АДМИН-ПАНЕЛЬ</h4>
+        <input type="number" id="adm-val" class="input-alt" placeholder="Сумма">
+        <button class="btn" onclick="addMoney()">ДОБАВИТЬ</button>
+        <button onclick="this.parentElement.style.display='none'" style="background:none; border:none; color:gray; margin-top:10px;">ОТМЕНА</button>
     </div>
 
     <script>
-        // === НАСТРОЙКИ АДМИНА ===
-        const ADMIN_CHAT_ID = "ТВОЙ_ID"; 
-        const BOT_TOKEN = "ТОКЕН_БОТА";
-        const MY_TG_LINK = "https://t.me/ТВОЙ_НИК";
-        // ========================
-
         let tg = window.Telegram.WebApp;
-        let curX = 1; let curV = 'UAH'; let currentEffect = '💰';
-        const rates = { 'UAH': 1, 'RUB': 2.5, 'TON': 0.005 };
-        
-        // СИНХРОНИЗАЦИЯ БАЛАНСА
         let bal = localStorage.getItem('gb_bal') ? parseFloat(localStorage.getItem('gb_bal')) : 10.00;
-        
-        function save() { localStorage.setItem('gb_bal', bal); }
-        function update() { document.getElementById('bal').innerText = bal.toFixed(2); save(); }
+        let aClicks = 0;
 
-        document.getElementById('name-tag').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Игрок";
-        
-        // УВЕДОМЛЕНИЕ О ВХОДЕ
-        window.addEventListener('load', () => { 
-            setTimeout(() => { document.getElementById('loading-screen').classList.add('fade-out'); }, 3000);
-            const entryMsg = `👋 ИГРОК ЗАШЕЛ!\n👤 Имя: ${tg.initDataUnsafe.user?.first_name || 'Неизвестно'}\n🆔 ID: ${tg.initDataUnsafe.user?.id || '?'}`;
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_CHAT_ID}&text=${encodeURIComponent(entryMsg)}`);
-        });
-
-        // ФУНКЦИИ ИНТЕРФЕЙСА
-        function toggleP(id) { document.getElementById(id==='menu'?'sett':'menu').classList.remove('open'); document.getElementById(id).classList.toggle('open'); }
-        function showSub(id) { let e = document.getElementById(id); e.style.display = (e.style.display==='block')?'none':'block'; }
-        function toggleCrypto() { let cw = document.getElementById('crypto-window'); cw.style.display = (cw.style.display==='block')?'none':'block'; }
-        function openSupport() { tg.openTelegramLink(MY_TG_LINK); }
-        
-        function copyWallet() {
-            const el = document.createElement('textarea'); el.value = 'UQBXsDXoFMFD3752_K-87KOPztj5KbTrQq9irD32bUEAMQ3L';
-            document.body.appendChild(el); el.select(); document.execCommand('copy');
-            document.body.removeChild(el); 
-            
-            // Отстук админу
-            const depMsg = `💎 КОПИРОВАНИЕ КОШЕЛЬКА!\n👤 Игрок: ${tg.initDataUnsafe.user?.first_name || '?'}\nЖди перевод на TON!`;
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_CHAT_ID}&text=${encodeURIComponent(depMsg)}`);
-            msg("АДРЕС СКОПИРОВАН!");
+        function update() { 
+            document.getElementById('bal').innerText = bal.toFixed(2); 
+            localStorage.setItem('gb_bal', bal);
         }
 
-        // ВЫВОД С АВТО-ОТСТУКОМ
-        function requestWithdraw() {
-            let amount = parseFloat(document.getElementById('w-amount').value);
-            let dest = document.getElementById('w-dest').value;
-            let min = 200 * rates[curV];
-            
-            if (!amount || amount < min) { msg("МИНИМУМ: " + min.toFixed(0)); return; }
-            if (amount > bal) { msg("НЕДОСТАТОЧНО СРЕДСТВ"); return; }
-            if (!dest) { msg("УКАЖИТЕ РЕКВИЗИТЫ"); return; }
-
-            const withdrawMsg = `🚀 НОВАЯ ЗАЯВКА НА ВЫВОД!\n\n👤 Игрок: ${tg.initDataUnsafe.user?.first_name || '?'}\n💰 Сумма: ${amount} ${curV}\n💳 Реквизиты: ${dest}\n🆔 ID: ${tg.initDataUnsafe.user?.id || '?'}`;
-            
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_CHAT_ID}&text=${encodeURIComponent(withdrawMsg)}`)
-            .then(res => { 
-                if(res.ok) { 
-                    bal -= amount; update(); 
-                    msg("ЗАЯВКА ОТПРАВЛЕНА!"); 
-                    document.getElementById('withdraw-area').style.display='none'; 
-                } else { msg("ОШИБКА БОТА"); }
-            })
-            .catch(() => msg("ОШИБКА СЕТИ"));
+        function go(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
 
-        // НАСТРОЙКИ С ПОДТВЕРЖДЕНИЕМ
-        function setT(c) { document.documentElement.style.setProperty('--mc', c); document.documentElement.style.setProperty('--sh', c+'66'); msg("ЦВЕТ ОБНОВЛЕН"); }
-        function setMTheme(bg, txt) { document.documentElement.style.setProperty('--bg-menu', bg); document.documentElement.style.setProperty('--txt-menu', txt); msg("ТЕМА ИЗМЕНЕНА"); }
-        function setE(eff) { currentEffect = eff; msg("ЭФФЕКТ: " + eff); }
-        function setV(newV) { bal = (bal / rates[curV]) * rates[newV]; curV = newV; document.getElementById('v-sym').innerText = curV; update(); msg("ВАЛЮТА: " + curV); }
-        function setX(x) { curX = x; document.querySelectorAll('.b-btn').forEach(b => b.classList.remove('active')); document.getElementById('x'+x).classList.add('active'); msg("МНОЖИТЕЛЬ: X" + x); }
-        
-        function msg(t) { 
-            let m = document.getElementById('msg'); m.innerText = t; m.style.display = 'block'; 
-            setTimeout(()=>m.style.display='none', 2000); 
+        function toggleMenu() { document.getElementById('side-menu').classList.toggle('menu-open'); }
+
+        function playSlot() {
+            if(bal < 2) return alert("Мало средств!");
+            bal -= 2; update();
+            const s = ['💎','💰','7️⃣','🍒'];
+            let res = [s[Math.floor(Math.random()*4)], s[Math.floor(Math.random()*4)], s[Math.floor(Math.random()*4)]];
+            document.getElementById('res-slot').innerText = res.join('');
+            if(res[0] === res[1] && res[1] === res[2]) { bal += 10; alert("WIN 10 UAH!"); }
+            update();
         }
 
-        // ЛОГИКА ИГРЫ
-        function play() {
-            let bet = parseFloat(document.getElementById('bet-val').value);
-            if (isNaN(bet) || bet <= 0 || bal < bet) { msg("НЕХВАТКА СРЕДСТВ"); return; }
-            bal -= bet; update();
-            let btn = document.getElementById('p-btn'); btn.disabled = true;
-            let i = 0; const s = ['💎', '💰', '7️⃣', '🍒', '🍀'];
-            
-            const t = setInterval(() => {
-                const r = [s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)]];
-                document.getElementById('scr').innerText = r.join('');
-                if (++i >= 12) {
-                    clearInterval(t); btn.disabled = false;
-                    let chance = (bet < 50 * rates[curV]) ? 0.35 : 0.15;
-                    if(curX > 1) chance /= (curX * 0.8);
-                    
-                    if (Math.random() < chance) {
-                        let w = s[Math.floor(Math.random()*5)]; document.getElementById('scr').innerText = w+w+w;
-                        let prize = bet * (2 + curX); bal += prize; 
-                        msg("ВЫИГРЫШ: +" + prize.toFixed(1));
-                        tg.HapticFeedback.notificationOccurred('success');
-                    }
-                    update();
-                }
-            }, 100);
+        function playWheel() {
+            if(bal < 5) return alert("Мало средств!");
+            bal -= 5; update();
+            let w = document.getElementById('wheel-obj');
+            let deg = Math.floor(Math.random() * 360) + 1800;
+            w.style.transform = `rotate(${deg}deg)`;
+            setTimeout(() => {
+                if(Math.random() < 0.2) { bal += 10; alert("ПОБЕДА x2 (10 UAH)!"); } 
+                else { alert("ПУСТО..."); }
+                update();
+            }, 3100);
         }
 
-        function promo() {
-            let p = prompt("Введите код:"); if(p && p.toUpperCase()==='JACKPOT') { bal += (1000*rates[curV]); msg("БОНУС +1000!"); update(); }
-            else if(p) { msg("КОД НЕВЕРЕН"); }
-        }
+        function admCheck() { aClicks++; if(aClicks >= 5) { document.getElementById('adm-win').style.display='block'; aClicks=0; } }
+        function addMoney() { bal += parseFloat(document.getElementById('adm-val').value); update(); document.getElementById('adm-win').style.display='none'; }
 
-        // БЕСКОНЕЧНЫЕ ЭФФЕКТЫ
-        setInterval(() => {
-            const p = document.createElement('div'); p.className = 'particle';
-            p.innerText = currentEffect; p.style.left = Math.random()*100+'vw';
-            p.style.animationDuration = (Math.random()*2+3)+'s';
-            document.body.appendChild(p); setTimeout(()=>p.remove(), 5000);
-        }, 400);
-
-        update(); tg.expand();
+        update();
+        tg.expand();
     </script>
 </body>
 </html>
