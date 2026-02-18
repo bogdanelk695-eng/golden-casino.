@@ -6,9 +6,27 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); }
-        body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
+        body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
+        
         .particle { position: absolute; top: -20px; user-select: none; z-index: -1; animation: fall linear infinite; font-size: 22px; }
         @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
+
+        /* LOADING SCREEN */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: var(--mc); font-size: 3em; font-weight: bold; z-index: 10000;
+            transition: opacity 1s ease-out;
+        }
+        #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+        #loading-text {
+            filter: drop-shadow(0 0 10px var(--sh));
+        }
+        .loading-particle { position: absolute; user-select: none; animation: spinAndFall linear infinite; font-size: 30px; }
+        @keyframes spinAndFall {
+            0% { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
+            100% { transform: translate(50vw, 100vh) rotate(720deg); opacity: 0; }
+        }
 
         .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; box-sizing: border-box; }
         .menu-btn, .sett-btn { font-size: 30px; cursor: pointer; color: var(--mc); filter: drop-shadow(0 0 5px var(--sh)); }
@@ -23,8 +41,8 @@
         .sub-box { display: none; padding-left: 15px; margin-bottom: 10px; border-left: 2px solid #333; }
         .sub-btn { padding: 12px; color: #ccc; font-size: 14px; cursor: pointer; border-bottom: 1px solid #222; }
 
-        .main { padding-top: 70px; }
-        .slot-machine { background: #0a0a0a; border: 3px solid var(--mc); border-radius: 35px; padding: 25px; display: inline-block; box-shadow: 0 0 40px var(--sh); }
+        .main { padding-top: 70px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .slot-machine { background: #0a0a0a; border: 3px solid var(--mc); border-radius: 35px; padding: 25px; display: inline-block; box-shadow: 0 0 40px var(--sh); margin: 0 auto; }
         .slots { font-size: 60px; margin: 15px 0; min-height: 80px; }
         
         .bet-input { background: #111; border: 2px solid var(--mc); color: #fff; padding: 12px; border-radius: 10px; width: 140px; font-size: 18px; text-align: center; margin: 10px 0; outline: none; }
@@ -32,11 +50,16 @@
         .b-btn.active { background: var(--mc); color: #000; box-shadow: 0 0 15px var(--sh); }
         .play-btn { background: var(--mc); color: #000; border: none; padding: 18px 60px; font-size: 24px; font-weight: 900; border-radius: 20px; cursor: pointer; margin-top: 15px; text-transform: uppercase; }
 
-        #msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; display: none; z-index: 1000; border: 1px solid #fff; width: 80%; font-size: 14px; }
+        /* MESSAGE AT BOTTOM */
+        #msg { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: none; z-index: 1000; border: 1px solid #fff; max-width: 90%; font-size: 13px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .color-dot { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
     </style>
 </head>
 <body>
+    <div id="loading-screen">
+        <div id="loading-text">Golden Bot</div>
+    </div>
+
     <div id="msg"></div>
     <div class="header">
         <div class="menu-btn" onclick="toggleP('menu')">☰</div>
@@ -108,8 +131,31 @@
         let curX = 1; let curV = 'UAH';
         let currentEffect = '💰'; 
         const rates = { 'UAH': 1, 'RUB': 2.5, 'TON': 0.005 };
+        const loadingParticles = ['💰', '💎', '🌸', '❄️', '⭐', '✨']; // Эффекты для загрузки
 
         document.getElementById('name-tag').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Игрок";
+
+        // ---- ЗАСТАВКА ЗАГРУЗКИ ----
+        window.addEventListener('load', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            setTimeout(() => {
+                loadingScreen.classList.add('fade-out');
+                setTimeout(() => loadingScreen.remove(), 1000); // Удалить после анимации
+            }, 3000); // Заставка 3 секунды
+
+            // Генерация эффектов для заставки
+            for (let i = 0; i < 50; i++) {
+                const lp = document.createElement('div');
+                lp.className = 'loading-particle';
+                lp.innerText = loadingParticles[Math.floor(Math.random() * loadingParticles.length)];
+                lp.style.left = Math.random() * 100 + 'vw';
+                lp.style.top = Math.random() * 100 + 'vh';
+                lp.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                lp.style.animationDelay = (Math.random() * 2) + 's';
+                loadingScreen.appendChild(lp);
+            }
+        });
+        // -----------------------------
 
         function toggleP(id) { 
             let other = (id === 'menu') ? 'sett' : 'menu';
@@ -143,7 +189,7 @@
         function msg(t) { 
             let m = document.getElementById('msg'); 
             m.innerText = t; m.style.display = 'block'; 
-            setTimeout(()=>m.style.display='none', 4000); 
+            setTimeout(()=>m.style.display='none', 3000); // Уведомления висят 3 секунды
         }
 
         function play() {
@@ -197,6 +243,7 @@
             else { msg("НЕВЕРНЫЙ КОД"); }
         }
 
+        // ЖИВЫЕ ЭФФЕКТЫ для игрового поля
         setInterval(() => {
             const p = document.createElement('div'); p.className = 'particle';
             p.innerText = currentEffect; 
@@ -208,5 +255,5 @@
         update(); tg.expand();
     </script>
 </body>
-        </html>
-    
+            </html>
+            
