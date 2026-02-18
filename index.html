@@ -7,126 +7,149 @@
     <style>
         :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); }
         body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; transition: 0.3s; }
-        
-        /* Эффекты фона */
         .particle { position: absolute; top: -20px; user-select: none; z-index: -1; animation: fall linear infinite; }
         @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
 
-        /* Верхняя панель */
-        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; padding: 0 15px; z-index: 100; }
-        .menu-btn { font-size: 28px; cursor: pointer; }
+        /* Шапка */
+        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; box-sizing: border-box; }
+        .menu-btn, .sett-btn { font-size: 28px; cursor: pointer; text-shadow: 0 0 10px var(--sh); }
         
-        /* Боковое меню */
-        #menu { position: fixed; top: 0; left: -280px; width: 240px; height: 100%; background: #111; border-right: 2px solid var(--mc); transition: 0.4s; z-index: 200; padding: 20px; text-align: left; box-shadow: 5px 0 15px #000; }
+        /* Панели (Меню и Настройки) */
+        .side-panel { position: fixed; top: 0; width: 250px; height: 100%; background: #111; transition: 0.4s; z-index: 200; padding: 20px; text-align: left; box-shadow: 0 0 20px #000; }
+        #menu { left: -300px; border-right: 2px solid var(--mc); }
+        #settings { right: -300px; border-left: 2px solid var(--mc); }
         #menu.open { left: 0; }
-        .menu-item { background: #222; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; }
-        .menu-item:active { background: #333; }
+        #settings.open { right: 0; }
 
-        /* Игровой интерфейс */
+        .item { background: #222; padding: 12px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid #333; }
+        .sub-item { padding: 8px 15px; color: #aaa; font-size: 14px; border-bottom: 1px solid #222; }
+
+        /* Игра */
         .main { padding-top: 80px; }
-        .balance-display { font-size: 24px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 10px var(--sh); }
-        .slot-machine { background: #111; border: 4px solid var(--mc); border-radius: 25px; padding: 20px; display: inline-block; box-shadow: 0 0 30px var(--sh); }
-        .slots { font-size: 60px; margin: 20px 0; min-width: 200px; height: 80px; }
+        .slot-machine { background: #111; border: 3px solid var(--mc); border-radius: 30px; padding: 20px; display: inline-block; box-shadow: 0 0 30px var(--sh); }
+        .slots { font-size: 65px; margin: 15px 0; letter-spacing: 5px; }
         
-        /* Ставки */
-        .bet-box { margin: 15px 0; display: flex; justify-content: center; gap: 10px; }
-        .bet-btn { background: #222; border: 1px solid var(--mc); color: var(--mc); padding: 8px 15px; border-radius: 8px; cursor: pointer; }
-        .bet-btn.active { background: var(--mc); color: #000; font-weight: bold; }
+        /* Ставки и X-ы */
+        .bet-row { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
+        .btn-mini { background: #1a1a1a; border: 1px solid var(--mc); color: var(--mc); padding: 5px 12px; border-radius: 8px; font-size: 14px; }
+        .btn-mini.active { background: var(--mc); color: #000; font-weight: bold; }
 
-        .spin-btn { background: var(--mc); color: #000; border: none; padding: 15px 40px; font-size: 22px; font-weight: 900; border-radius: 15px; cursor: pointer; box-shadow: 0 4px 0 #8b6508; }
-        .spin-btn:disabled { opacity: 0.5; transform: translateY(2px); }
-
-        /* Настройки в меню */
-        .sett-label { font-size: 14px; color: #888; margin: 10px 0 5px; }
-        .color-dots { display: flex; gap: 8px; margin-bottom: 15px; }
-        .dot { width: 25px; height: 25px; border-radius: 50%; border: 1px solid #fff; cursor: pointer; }
+        .spin-btn { background: var(--mc); color: #000; border: none; padding: 15px 50px; font-size: 22px; font-weight: 900; border-radius: 18px; cursor: pointer; margin-top: 10px; }
+        
+        /* Внутреннее уведомление */
+        #game-msg { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; display: none; z-index: 300; }
     </style>
 </head>
 <body>
-    <div class="header"><div class="menu-btn" onclick="toggleM()">☰</div></div>
+    <div id="game-msg"></div>
 
-    <div id="menu">
-        <h2 id="u-name" style="color:#fff; margin-bottom:5px;">Игрок</h2>
-        <div class="menu-item" onclick="view('prof')">👤 Профиль</div>
-        <div id="prof-sub" style="display:none; padding-left:15px;">
-            <div class="menu-item" onclick="tgAlert('Вывод от 1000 G')">💰 Вывод</div>
-            <div class="menu-item" onclick="tgAlert('Пополнение временно недоступно')">💳 Пополнить</div>
-            <div class="menu-item" onclick="promo()">🎁 Промокод</div>
+    <div class="header">
+        <div class="menu-btn" onclick="toggleP('menu')">☰</div>
+        <div class="sett-btn" onclick="toggleP('settings')">⚙️</div>
+    </div>
+
+    <div id="menu" class="side-panel">
+        <h2 id="u-name">Игрок</h2>
+        <div class="item" onclick="toggleSub('prof-items')">👤 Профиль</div>
+        <div id="prof-items" style="display:none">
+            <div class="sub-item" onclick="showMsg('Вывод от 1000')">💰 Вывод</div>
+            <div class="sub-item" onclick="toggleSub('curr-items')">💱 Смена валюты</div>
+            <div id="curr-items" style="display:none; padding-left:10px;">
+                <div class="sub-item" onclick="setCur('RUB')">🇷🇺 Рубли</div>
+                <div class="sub-item" onclick="setCur('UAH')">🇺🇦 Гривны</div>
+                <div class="sub-item" onclick="setCur('USD')">🇺🇸 Доллары</div>
+                <div class="sub-item" onclick="setCur('TON')">💎 TON Crystal</div>
+            </div>
+            <div class="sub-item" onclick="promo()">🎁 Промокод</div>
         </div>
 
-        <div class="sett-label">ЦВЕТ ТЕМЫ:</div>
-        <div class="color-dots">
-            <div class="dot" style="background:#ffd700" onclick="setT('#ffd700')"></div>
-            <div class="dot" style="background:#00ff00" onclick="setT('#00ff00')"></div>
-            <div class="dot" style="background:#008cff" onclick="setT('#008cff')"></div>
-            <div class="dot" style="background:#ff3333" onclick="setT('#ff3333')"></div>
+        <div style="margin-top:20px; font-size:12px; color:#555;">ТЕМА ДИЗАЙНА:</div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <div onclick="setT('#ffd700')" style="width:30px;height:30px;background:#ffd700;border-radius:50%"></div>
+            <div onclick="setT('#a020f0')" style="width:30px;height:30px;background:#a020f0;border-radius:50%"></div>
+            <div onclick="setT('#00ff00')" style="width:30px;height:30px;background:#00ff00;border-radius:50%"></div>
+            <div onclick="setT('#008cff')" style="width:30px;height:30px;background:#008cff;border-radius:50%"></div>
         </div>
+    </div>
 
-        <div class="sett-label">ЭФФЕКТЫ:</div>
-        <select onchange="setEff(this.value)" style="width:100%; padding:8px; background:#222; color:#fff; border-radius:8px;">
-            <option value="G">Золотые монеты</option>
-            <option value="❄️">Снежинки</option>
-            <option value="🌸">Сакура</option>
-            <option value="🍀">Клевер</option>
-        </select>
-
-        <button class="btn" onclick="toggleM()" style="margin-top:30px; width:100%; padding:10px; background:#333; color:#fff; border:none; border-radius:10px;">ЗАКРЫТЬ</button>
+    <div id="settings" class="side-panel">
+        <h3>Настройки</h3>
+        <p style="font-size:12px; color:#555;">ЯЗЫК / LANGUAGE:</p>
+        <div class="item" onclick="setLang('RU')">🇷🇺 Русский</div>
+        <div class="item" onclick="setLang('UA')">🇺🇦 Українська</div>
+        <div class="item" onclick="setLang('BY')">🇧🇾 Беларуская</div>
+        <div class="item" onclick="setLang('KZ')">🇰🇿 Қазақша</div>
+        <div class="item" onclick="setLang('EN')">🇺🇸 English</div>
+        <button onclick="toggleP('settings')" style="width:100%; padding:10px; margin-top:20px; background:#333; color:#fff; border:none; border-radius:10px;">ОК</button>
     </div>
 
     <div class="main">
-        <div class="balance-display">БАЛАНС: <span id="bal">100</span> G</div>
+        <div style="font-size:18px; margin-bottom:5px;">БАЛАНС:</div>
+        <div style="font-size:32px; font-weight:bold; margin-bottom:15px;"><span id="bal">100</span> <span id="cur-sym">G</span></div>
+        
         <div class="slot-machine">
-            <div class="slots" id="screen">🎰🎰🎰</div>
-            <div class="bet-box">
-                <div class="bet-btn active" onclick="setBet(10, this)">10</div>
-                <div class="bet-btn" onclick="setBet(50, this)">50</div>
-                <div class="bet-btn" onclick="setBet(100, this)">100</div>
+            <div class="slots" id="scr">🎰🎰🎰</div>
+            
+            <div style="font-size:12px; color:#888;">СУММА:</div>
+            <div class="bet-row">
+                <div class="btn-mini active" onclick="setB(10, this)">10</div>
+                <div class="btn-mini" onclick="setB(50, this)">50</div>
+                <div class="btn-mini" onclick="setB(100, this)">100</div>
             </div>
-            <button class="spin-btn" id="s-btn" onclick="play()">КРУТИТЬ</button>
+
+            <div style="font-size:12px; color:#888;">МНОЖИТЕЛЬ (РИСК):</div>
+            <div class="bet-row">
+                <div class="btn-mini active" onclick="setX(1, this)">X1</div>
+                <div class="btn-mini" onclick="setX(2, this)">X2</div>
+                <div class="btn-mini" onclick="setX(3, this)">X3</div>
+            </div>
+
+            <button class="spin-btn" id="sp-btn" onclick="spin()">ИГРАТЬ</button>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let bal = 100; let curBet = 10; let curEff = 'G';
-        document.getElementById('u-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Игрок";
-
-        function toggleM() { document.getElementById('menu').classList.toggle('open'); }
-        function view(id) { let s = document.getElementById('prof-sub'); s.style.display = s.style.display === 'none' ? 'block' : 'none'; }
-        function tgAlert(t) { tg.showAlert(t); }
-
-        function setT(c) {
-            document.documentElement.style.setProperty('--mc', c);
-            document.documentElement.style.setProperty('--sh', c + '66');
+        let bal = 100; let curB = 10; let curX = 1; let curSym = 'G';
+        
+        function toggleP(id) { document.getElementById(id).classList.toggle('open'); }
+        function toggleSub(id) { let e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
+        
+        function setT(c) { document.documentElement.style.setProperty('--mc', c); document.documentElement.style.setProperty('--sh', c+'66'); }
+        function setB(v, el) { curB = v; selectBtn(el, '.bet-row:first-of-type .btn-mini'); }
+        function setX(v, el) { curX = v; selectBtn(el, '.bet-row:last-of-type .btn-mini'); }
+        function selectBtn(el, sel) { document.querySelectorAll(sel).forEach(b => b.classList.remove('active')); el.classList.add('active'); }
+        
+        function setCur(s) { curSym = s; document.getElementById('cur-sym').innerText = s; toggleSub('curr-items'); }
+        function showMsg(t) { 
+            let m = document.getElementById('game-msg'); m.innerText = t; m.style.display = 'block';
+            setTimeout(() => m.style.display = 'none', 2500);
         }
 
-        function setEff(v) { curEff = v; }
-        function setBet(v, el) {
-            curBet = v;
-            document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function play() {
-            if (bal < curBet) { tg.showAlert("Недостаточно средств!"); return; }
-            bal -= curBet; updateUI();
-            let btn = document.getElementById('s-btn'); btn.disabled = true;
+        function spin() {
+            if (bal < curB) { showMsg("Мало средств!"); return; }
+            bal -= curB; updateUI();
+            let btn = document.getElementById('sp-btn'); btn.disabled = true;
             
-            let count = 0;
-            const symbols = ['💎', '💰', '7️⃣', '🍒', '🍀'];
-            const roll = setInterval(() => {
-                const res = [symbols[Math.floor(Math.random()*5)], symbols[Math.floor(Math.random()*5)], symbols[Math.floor(Math.random()*5)]];
-                document.getElementById('screen').innerText = res.join('');
-                if (++count >= 12) {
-                    clearInterval(roll);
-                    btn.disabled = false;
-                    // ШАНС 37% на победу
-                    if (Math.random() < 0.37) {
-                        const winSym = symbols[Math.floor(Math.random()*5)];
-                        document.getElementById('screen').innerText = winSym + winSym + winSym;
-                        bal += curBet * 4;
+            let i = 0; const s = ['💎', '💰', '7️⃣', '🍒', '🍀'];
+            const t = setInterval(() => {
+                const r = [s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)]];
+                document.getElementById('scr').innerText = r.join('');
+                if (++i >= 12) {
+                    clearInterval(t); btn.disabled = false;
+                    
+                    // ШАНСЫ: Базовый 30%, X2 -> 15%, X3 -> 7%
+                    let chance = 0.3;
+                    if(curX === 2) chance = 0.15;
+                    if(curX === 3) chance = 0.07;
+
+                    if (Math.random() < chance) {
+                        let winSym = s[Math.floor(Math.random()*5)];
+                        document.getElementById('scr').innerText = winSym + winSym + winSym;
+                        let winVal = curB * (3 + curX);
+                        bal += winVal;
+                        showMsg("ВЫИГРЫШ: +" + winVal + " " + curSym);
                         tg.HapticFeedback.notificationOccurred('success');
-                        tg.showAlert("ПОБЕДА! +" + (curBet * 4) + " G");
                     }
                     updateUI();
                 }
@@ -134,19 +157,17 @@
         }
 
         function updateUI() { document.getElementById('bal').innerText = bal; }
-
-        function promo() {
-            let c = prompt("Введи код:");
-            if (c && c.toUpperCase() === "BOGDAN_BOSS") { bal += 5000; updateUI(); tgAlert("Босс в здании! +5000 G"); }
-        }
+        function setLang(l) { showMsg("Язык изменен на " + l); toggleP('settings'); }
+        function promo() { let p = prompt("Код:"); if(p && p.toUpperCase()==='TON') { bal+=500; updateUI(); showMsg("+500 G"); } }
 
         setInterval(() => {
             const p = document.createElement('div'); p.className = 'particle';
-            p.innerText = curEff; p.style.left = Math.random() * 100 + 'vw';
-            p.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            p.innerText = curSym === 'TON' ? '💎' : 'G'; p.style.left = Math.random()*100+'vw';
+            p.style.animationDuration = (Math.random()*3+2)+'s';
             document.body.appendChild(p); setTimeout(() => p.remove(), 5000);
         }, 400);
         updateUI();
     </script>
 </body>
-</html>
+                    </html>
+                    
