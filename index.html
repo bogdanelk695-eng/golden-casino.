@@ -7,7 +7,7 @@
     <style>
         :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); }
         body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
-        .particle { position: absolute; top: -20px; user-select: none; z-index: -1; animation: fall linear infinite; }
+        .particle { position: absolute; top: -20px; user-select: none; z-index: -1; animation: fall linear infinite; font-size: 20px; }
         @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
 
         .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; box-sizing: border-box; }
@@ -29,8 +29,7 @@
         
         .bet-input { background: #111; border: 2px solid var(--mc); color: #fff; padding: 12px; border-radius: 10px; width: 140px; font-size: 18px; text-align: center; margin: 10px 0; outline: none; }
         
-        .bet-row { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
-        .b-btn { background: #111; border: 1px solid var(--mc); color: var(--mc); padding: 8px 18px; border-radius: 10px; font-weight: bold; transition: 0.2s; }
+        .b-btn { background: #111; border: 1px solid var(--mc); color: var(--mc); padding: 8px 18px; border-radius: 10px; font-weight: bold; transition: 0.2s; cursor: pointer; }
         .b-btn.active { background: var(--mc); color: #000; box-shadow: 0 0 15px var(--sh); }
 
         .play-btn { background: var(--mc); color: #000; border: none; padding: 18px 60px; font-size: 24px; font-weight: 900; border-radius: 20px; cursor: pointer; margin-top: 15px; text-transform: uppercase; }
@@ -42,8 +41,8 @@
     <div id="msg"></div>
 
     <div class="header">
-        <div class="menu-btn" onclick="openP('menu')">☰</div>
-        <div class="sett-btn" onclick="openP('sett')">⚙️</div>
+        <div class="menu-btn" onclick="toggleP('menu')">☰</div>
+        <div class="sett-btn" onclick="toggleP('sett')">⚙️</div>
     </div>
 
     <div id="menu" class="side-panel">
@@ -68,14 +67,13 @@
             <div onclick="setT('#ffffff')" style="width:35px;height:35px;background:#ffffff;border-radius:50%;border:2px solid #fff;"></div>
         </div>
         
-        <button onclick="openP('menu')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">⬅️ НАЗАД</button>
+        <button onclick="toggleP('menu')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">⬅️ НАЗАД</button>
     </div>
 
     <div id="sett" class="side-panel">
-        <h2 style="margin-top:40px;">ЯЗЫК</h2>
-        <div class="item" onclick="setL('RU')">🇷🇺 РУССКИЙ</div>
-        <div class="item" onclick="setL('UA')">🇺🇦 УКРАЇНСЬКА</div>
-        <button onclick="openP('sett')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">ОК</button>
+        <h2 style="margin-top:40px;">НАСТРОЙКИ</h2>
+        <div class="item">🇷🇺 РУССКИЙ (АКТИВЕН)</div>
+        <button onclick="toggleP('sett')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">ОК</button>
     </div>
 
     <div class="main">
@@ -90,7 +88,7 @@
             <input type="number" id="bet-val" class="bet-input" value="10">
             
             <div style="font-size:11px; margin-top:10px; opacity:0.6;">РИСК:</div>
-            <div class="bet-row">
+            <div style="display:flex; justify-content:center; gap:10px; margin:10px 0;">
                 <div class="b-btn active" onclick="setX(1, this)">X1</div>
                 <div class="b-btn" onclick="setX(2, this)">X2</div>
                 <div class="b-btn" onclick="setX(3, this)">X3</div>
@@ -104,7 +102,13 @@
         let bal = 100; let curX = 1; let curV = 'G';
         document.getElementById('name-tag').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Игрок";
 
-        function openP(id) { document.getElementById(id).classList.toggle('open'); }
+        // Авто-закрытие другого окна
+        function toggleP(id) { 
+            let other = (id === 'menu') ? 'sett' : 'menu';
+            document.getElementById(other).classList.remove('open');
+            document.getElementById(id).classList.toggle('open'); 
+        }
+
         function showSub(id) { let e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
         function setT(c) { document.documentElement.style.setProperty('--mc', c); document.documentElement.style.setProperty('--sh', c+'66'); }
         function setX(v, el) { curX = v; document.querySelectorAll('.b-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
@@ -124,9 +128,12 @@
                 document.getElementById('scr').innerText = r.join('');
                 if (++i >= 12) {
                     clearInterval(t); btn.disabled = false;
-                    let winChance = 0.3; // 30% на победу
-                    if(curX === 2) winChance = 0.15;
-                    if(curX === 3) winChance = 0.07;
+                    
+                    // ЛОГИКА ШАНСОВ
+                    let winChance = (bet < 100) ? 0.30 : 0.15;
+                    if(curX === 2) winChance *= 0.5;
+                    if(curX === 3) winChance *= 0.3;
+
                     if (Math.random() < winChance) {
                         let w = s[Math.floor(Math.random()*5)];
                         document.getElementById('scr').innerText = w+w+w;
@@ -143,18 +150,21 @@
         function update() { document.getElementById('bal').innerText = bal; }
         function withdraw() { 
             if (bal < 300) { msg("МИН. ВЫВОД: 300 " + curV); return; }
-            let a = prompt("Адрес TON:"); if(a) msg("Заявка на вывод принята!"); 
+            let a = prompt("Адрес TON:"); if(a) msg("Заявка отправлена!"); 
         }
         function promo() { let p = prompt("Код:"); if(p && p.toUpperCase()==='TON') { bal+=500; update(); msg("+500 " + curV); } }
 
+        // ЭФФЕКТЫ (МОНЕТКИ)
         setInterval(() => {
             const p = document.createElement('div'); p.className = 'particle';
-            p.innerText = curV === 'TON' ? '💎' : 'G'; p.style.left = Math.random()*100+'vw';
+            p.innerText = (curV === 'TON') ? '💎' : '💰'; 
+            p.style.left = Math.random()*100+'vw';
             p.style.animationDuration = (Math.random()*2+3)+'s';
+            p.style.opacity = Math.random();
             document.body.appendChild(p); setTimeout(()=>p.remove(), 5000);
-        }, 400);
+        }, 300);
+
         update(); tg.expand();
     </script>
 </body>
-                </html>
-                
+</html>
