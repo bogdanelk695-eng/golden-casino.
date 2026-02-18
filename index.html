@@ -6,168 +6,155 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); }
-        body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; transition: 0.3s; }
+        body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
         .particle { position: absolute; top: -20px; user-select: none; z-index: -1; animation: fall linear infinite; }
         @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
 
-        /* Шапка */
         .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; box-sizing: border-box; }
-        .menu-btn, .sett-btn { font-size: 28px; cursor: pointer; text-shadow: 0 0 10px var(--sh); }
+        .menu-btn, .sett-btn { font-size: 30px; cursor: pointer; color: var(--mc); filter: drop-shadow(0 0 5px var(--sh)); }
         
-        /* Панели (Меню и Настройки) */
-        .side-panel { position: fixed; top: 0; width: 250px; height: 100%; background: #111; transition: 0.4s; z-index: 200; padding: 20px; text-align: left; box-shadow: 0 0 20px #000; }
+        .side-panel { position: fixed; top: 0; width: 260px; height: 100%; background: #0f0f0f; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200; padding: 20px; text-align: left; box-shadow: 0 0 25px #000; box-sizing: border-box; }
         #menu { left: -300px; border-right: 2px solid var(--mc); }
-        #settings { right: -300px; border-left: 2px solid var(--mc); }
-        #menu.open { left: 0; }
-        #settings.open { right: 0; }
+        #sett { right: -300px; border-left: 2px solid var(--mc); }
+        .open#menu { left: 0; }
+        .open#sett { right: 0; }
 
-        .item { background: #222; padding: 12px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid #333; }
-        .sub-item { padding: 8px 15px; color: #aaa; font-size: 14px; border-bottom: 1px solid #222; }
+        .item { background: #1a1a1a; padding: 14px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid #333; font-weight: bold; }
+        .sub-box { display: none; padding-left: 15px; margin-bottom: 10px; border-left: 2px solid #333; }
+        .sub-btn { padding: 10px; color: #ccc; font-size: 14px; cursor: pointer; border-bottom: 1px solid #222; }
 
-        /* Игра */
-        .main { padding-top: 80px; }
-        .slot-machine { background: #111; border: 3px solid var(--mc); border-radius: 30px; padding: 20px; display: inline-block; box-shadow: 0 0 30px var(--sh); }
-        .slots { font-size: 65px; margin: 15px 0; letter-spacing: 5px; }
+        .main { padding-top: 70px; }
+        .slot-machine { background: #0a0a0a; border: 3px solid var(--mc); border-radius: 35px; padding: 25px; display: inline-block; box-shadow: 0 0 40px var(--sh); }
+        .slots { font-size: 60px; margin: 15px 0; min-height: 80px; }
         
-        /* Ставки и X-ы */
-        .bet-row { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
-        .btn-mini { background: #1a1a1a; border: 1px solid var(--mc); color: var(--mc); padding: 5px 12px; border-radius: 8px; font-size: 14px; }
-        .btn-mini.active { background: var(--mc); color: #000; font-weight: bold; }
-
-        .spin-btn { background: var(--mc); color: #000; border: none; padding: 15px 50px; font-size: 22px; font-weight: 900; border-radius: 18px; cursor: pointer; margin-top: 10px; }
+        .bet-input { background: #111; border: 2px solid var(--mc); color: #fff; padding: 12px; border-radius: 10px; width: 140px; font-size: 18px; text-align: center; margin: 10px 0; outline: none; }
         
-        /* Внутреннее уведомление */
-        #game-msg { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; display: none; z-index: 300; }
+        .bet-row { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
+        .b-btn { background: #111; border: 1px solid var(--mc); color: var(--mc); padding: 8px 18px; border-radius: 10px; font-weight: bold; transition: 0.2s; }
+        .b-btn.active { background: var(--mc); color: #000; box-shadow: 0 0 15px var(--sh); }
+
+        .play-btn { background: var(--mc); color: #000; border: none; padding: 18px 60px; font-size: 24px; font-weight: 900; border-radius: 20px; cursor: pointer; margin-top: 15px; text-transform: uppercase; }
+
+        #msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; display: none; z-index: 1000; border: 1px solid #fff; }
     </style>
 </head>
 <body>
-    <div id="game-msg"></div>
+    <div id="msg"></div>
 
     <div class="header">
-        <div class="menu-btn" onclick="toggleP('menu')">☰</div>
-        <div class="sett-btn" onclick="toggleP('settings')">⚙️</div>
+        <div class="menu-btn" onclick="openP('menu')">☰</div>
+        <div class="sett-btn" onclick="openP('sett')">⚙️</div>
     </div>
 
     <div id="menu" class="side-panel">
-        <h2 id="u-name">Игрок</h2>
-        <div class="item" onclick="toggleSub('prof-items')">👤 Профиль</div>
-        <div id="prof-items" style="display:none">
-            <div class="sub-item" onclick="showMsg('Вывод от 1000')">💰 Вывод</div>
-            <div class="sub-item" onclick="toggleSub('curr-items')">💱 Смена валюты</div>
-            <div id="curr-items" style="display:none; padding-left:10px;">
-                <div class="sub-item" onclick="setCur('RUB')">🇷🇺 Рубли</div>
-                <div class="sub-item" onclick="setCur('UAH')">🇺🇦 Гривны</div>
-                <div class="sub-item" onclick="setCur('USD')">🇺🇸 Доллары</div>
-                <div class="sub-item" onclick="setCur('TON')">💎 TON Crystal</div>
+        <h2 id="name-tag" style="margin-top:40px; color:#fff;">Игрок</h2>
+        <div class="item" onclick="showSub('p-items')">👤 ПРОФИЛЬ</div>
+        <div id="p-items" class="sub-box">
+            <div class="sub-btn" onclick="withdraw()">💎 ВЫВОД (от 300)</div>
+            <div class="sub-btn" onclick="showSub('v-items')">💱 ВАЛЮТА</div>
+            <div id="v-items" class="sub-box">
+                <div class="sub-btn" onclick="setV('RUB')">₽ RUB</div>
+                <div class="sub-btn" onclick="setV('UAH')">₴ UAH</div>
+                <div class="sub-btn" onclick="setV('TON')">💎 TON</div>
             </div>
-            <div class="sub-item" onclick="promo()">🎁 Промокод</div>
+            <div class="sub-btn" onclick="promo()">🎁 ПРОМОКОД</div>
         </div>
 
-        <div style="margin-top:20px; font-size:12px; color:#555;">ТЕМА ДИЗАЙНА:</div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <div onclick="setT('#ffd700')" style="width:30px;height:30px;background:#ffd700;border-radius:50%"></div>
-            <div onclick="setT('#a020f0')" style="width:30px;height:30px;background:#a020f0;border-radius:50%"></div>
-            <div onclick="setT('#00ff00')" style="width:30px;height:30px;background:#00ff00;border-radius:50%"></div>
-            <div onclick="setT('#008cff')" style="width:30px;height:30px;background:#008cff;border-radius:50%"></div>
+        <div style="margin: 20px 0 10px; font-size: 12px; color: #666;">ТЕМА:</div>
+        <div style="display:flex; gap:10px; flex-wrap: wrap;">
+            <div onclick="setT('#ffd700')" style="width:35px;height:35px;background:#ffd700;border-radius:50%;border:2px solid #fff;"></div>
+            <div onclick="setT('#ff3333')" style="width:35px;height:35px;background:#ff3333;border-radius:50%;border:2px solid #fff;"></div>
+            <div onclick="setT('#a020f0')" style="width:35px;height:35px;background:#a020f0;border-radius:50%;border:2px solid #fff;"></div>
+            <div onclick="setT('#ffffff')" style="width:35px;height:35px;background:#ffffff;border-radius:50%;border:2px solid #fff;"></div>
         </div>
+        
+        <button onclick="openP('menu')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">⬅️ НАЗАД</button>
     </div>
 
-    <div id="settings" class="side-panel">
-        <h3>Настройки</h3>
-        <p style="font-size:12px; color:#555;">ЯЗЫК / LANGUAGE:</p>
-        <div class="item" onclick="setLang('RU')">🇷🇺 Русский</div>
-        <div class="item" onclick="setLang('UA')">🇺🇦 Українська</div>
-        <div class="item" onclick="setLang('BY')">🇧🇾 Беларуская</div>
-        <div class="item" onclick="setLang('KZ')">🇰🇿 Қазақша</div>
-        <div class="item" onclick="setLang('EN')">🇺🇸 English</div>
-        <button onclick="toggleP('settings')" style="width:100%; padding:10px; margin-top:20px; background:#333; color:#fff; border:none; border-radius:10px;">ОК</button>
+    <div id="sett" class="side-panel">
+        <h2 style="margin-top:40px;">ЯЗЫК</h2>
+        <div class="item" onclick="setL('RU')">🇷🇺 РУССКИЙ</div>
+        <div class="item" onclick="setL('UA')">🇺🇦 УКРАЇНСЬКА</div>
+        <button onclick="openP('sett')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">ОК</button>
     </div>
 
     <div class="main">
-        <div style="font-size:18px; margin-bottom:5px;">БАЛАНС:</div>
-        <div style="font-size:32px; font-weight:bold; margin-bottom:15px;"><span id="bal">100</span> <span id="cur-sym">G</span></div>
+        <div class="bal-box">
+            <div style="font-size:14px; opacity:0.7;">БАЛАНС</div>
+            <div style="font-size:36px; font-weight:900;"><span id="bal">100</span> <span id="v-sym">G</span></div>
+        </div>
         
         <div class="slot-machine">
             <div class="slots" id="scr">🎰🎰🎰</div>
+            <div style="font-size:11px; opacity:0.6;">ВАША СТАВКА:</div>
+            <input type="number" id="bet-val" class="bet-input" value="10">
             
-            <div style="font-size:12px; color:#888;">СУММА:</div>
+            <div style="font-size:11px; margin-top:10px; opacity:0.6;">РИСК:</div>
             <div class="bet-row">
-                <div class="btn-mini active" onclick="setB(10, this)">10</div>
-                <div class="btn-mini" onclick="setB(50, this)">50</div>
-                <div class="btn-mini" onclick="setB(100, this)">100</div>
+                <div class="b-btn active" onclick="setX(1, this)">X1</div>
+                <div class="b-btn" onclick="setX(2, this)">X2</div>
+                <div class="b-btn" onclick="setX(3, this)">X3</div>
             </div>
-
-            <div style="font-size:12px; color:#888;">МНОЖИТЕЛЬ (РИСК):</div>
-            <div class="bet-row">
-                <div class="btn-mini active" onclick="setX(1, this)">X1</div>
-                <div class="btn-mini" onclick="setX(2, this)">X2</div>
-                <div class="btn-mini" onclick="setX(3, this)">X3</div>
-            </div>
-
-            <button class="spin-btn" id="sp-btn" onclick="spin()">ИГРАТЬ</button>
+            <button class="play-btn" id="p-btn" onclick="play()">ИГРАТЬ</button>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let bal = 100; let curB = 10; let curX = 1; let curSym = 'G';
-        
-        function toggleP(id) { document.getElementById(id).classList.toggle('open'); }
-        function toggleSub(id) { let e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
-        
-        function setT(c) { document.documentElement.style.setProperty('--mc', c); document.documentElement.style.setProperty('--sh', c+'66'); }
-        function setB(v, el) { curB = v; selectBtn(el, '.bet-row:first-of-type .btn-mini'); }
-        function setX(v, el) { curX = v; selectBtn(el, '.bet-row:last-of-type .btn-mini'); }
-        function selectBtn(el, sel) { document.querySelectorAll(sel).forEach(b => b.classList.remove('active')); el.classList.add('active'); }
-        
-        function setCur(s) { curSym = s; document.getElementById('cur-sym').innerText = s; toggleSub('curr-items'); }
-        function showMsg(t) { 
-            let m = document.getElementById('game-msg'); m.innerText = t; m.style.display = 'block';
-            setTimeout(() => m.style.display = 'none', 2500);
-        }
+        let bal = 100; let curX = 1; let curV = 'G';
+        document.getElementById('name-tag').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Игрок";
 
-        function spin() {
-            if (bal < curB) { showMsg("Мало средств!"); return; }
-            bal -= curB; updateUI();
-            let btn = document.getElementById('sp-btn'); btn.disabled = true;
+        function openP(id) { document.getElementById(id).classList.toggle('open'); }
+        function showSub(id) { let e = document.getElementById(id); e.style.display = e.style.display==='none'?'block':'none'; }
+        function setT(c) { document.documentElement.style.setProperty('--mc', c); document.documentElement.style.setProperty('--sh', c+'66'); }
+        function setX(v, el) { curX = v; document.querySelectorAll('.b-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
+        function setV(s) { curV = s; document.getElementById('v-sym').innerText = s; showSub('v-items'); }
+        function msg(t) { let m = document.getElementById('msg'); m.innerText = t; m.style.display = 'block'; setTimeout(()=>m.style.display='none', 2000); }
+
+        function play() {
+            let bet = parseInt(document.getElementById('bet-val').value);
+            if (isNaN(bet) || bet <= 0) { msg("ВВЕДИТЕ СУММУ!"); return; }
+            if (bal < bet) { msg("МАЛО СРЕДСТВ!"); return; }
             
+            bal -= bet; update();
+            let btn = document.getElementById('p-btn'); btn.disabled = true;
             let i = 0; const s = ['💎', '💰', '7️⃣', '🍒', '🍀'];
             const t = setInterval(() => {
                 const r = [s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)]];
                 document.getElementById('scr').innerText = r.join('');
                 if (++i >= 12) {
                     clearInterval(t); btn.disabled = false;
-                    
-                    // ШАНСЫ: Базовый 30%, X2 -> 15%, X3 -> 7%
-                    let chance = 0.3;
-                    if(curX === 2) chance = 0.15;
-                    if(curX === 3) chance = 0.07;
-
-                    if (Math.random() < chance) {
-                        let winSym = s[Math.floor(Math.random()*5)];
-                        document.getElementById('scr').innerText = winSym + winSym + winSym;
-                        let winVal = curB * (3 + curX);
-                        bal += winVal;
-                        showMsg("ВЫИГРЫШ: +" + winVal + " " + curSym);
+                    let winChance = 0.3; // 30% на победу
+                    if(curX === 2) winChance = 0.15;
+                    if(curX === 3) winChance = 0.07;
+                    if (Math.random() < winChance) {
+                        let w = s[Math.floor(Math.random()*5)];
+                        document.getElementById('scr').innerText = w+w+w;
+                        let prize = bet * (3 + curX);
+                        bal += prize;
+                        msg("ВЫИГРЫШ: +" + prize + " " + curV);
                         tg.HapticFeedback.notificationOccurred('success');
                     }
-                    updateUI();
+                    update();
                 }
-            }, 80);
+            }, 90);
         }
 
-        function updateUI() { document.getElementById('bal').innerText = bal; }
-        function setLang(l) { showMsg("Язык изменен на " + l); toggleP('settings'); }
-        function promo() { let p = prompt("Код:"); if(p && p.toUpperCase()==='TON') { bal+=500; updateUI(); showMsg("+500 G"); } }
+        function update() { document.getElementById('bal').innerText = bal; }
+        function withdraw() { 
+            if (bal < 300) { msg("МИН. ВЫВОД: 300 " + curV); return; }
+            let a = prompt("Адрес TON:"); if(a) msg("Заявка на вывод принята!"); 
+        }
+        function promo() { let p = prompt("Код:"); if(p && p.toUpperCase()==='TON') { bal+=500; update(); msg("+500 " + curV); } }
 
         setInterval(() => {
             const p = document.createElement('div'); p.className = 'particle';
-            p.innerText = curSym === 'TON' ? '💎' : 'G'; p.style.left = Math.random()*100+'vw';
-            p.style.animationDuration = (Math.random()*3+2)+'s';
-            document.body.appendChild(p); setTimeout(() => p.remove(), 5000);
+            p.innerText = curV === 'TON' ? '💎' : 'G'; p.style.left = Math.random()*100+'vw';
+            p.style.animationDuration = (Math.random()*2+3)+'s';
+            document.body.appendChild(p); setTimeout(()=>p.remove(), 5000);
         }, 400);
-        updateUI();
+        update(); tg.expand();
     </script>
 </body>
-                    </html>
-                    
+                </html>
+                
