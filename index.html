@@ -5,98 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main-color: #ffd700; --shadow: rgba(255, 215, 0, 0.5); }
-        body { background: #000; color: var(--main-color); text-align: center; font-family: 'Arial', sans-serif; margin: 0; overflow: hidden; height: 100vh; transition: 0.3s; }
-        .coin { position: absolute; color: var(--main-color); font-size: 20px; user-select: none; z-index: -1; animation: fall linear infinite; }
-        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+        :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); }
+        body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; transition: 0.3s; }
         
-        #side-menu { position: fixed; top: 0; left: -260px; width: 220px; height: 100%; background: rgba(15, 15, 15, 0.98); border-right: 2px solid var(--main-color); transition: 0.4s; z-index: 100; padding: 20px; text-align: left; }
-        #side-menu.active { left: 0; }
-        .menu-toggle { font-size: 32px; position: fixed; top: 15px; left: 15px; cursor: pointer; z-index: 110; text-shadow: 0 0 10px var(--main-color); }
+        /* Эффекты фона */
+        .particle { position: absolute; top: -20px; user-select: none; z-index: -1; animation: fall linear infinite; }
+        @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
 
-        /* Кнопки выбора цвета */
-        .color-picker { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
-        .color-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
-
-        .slot-box { display: inline-block; padding: 25px; border: 5px solid var(--main-color); border-radius: 30px; background: #000; box-shadow: 0 0 40px var(--shadow); transition: 0.3s; }
-        .slots { font-size: 70px; margin: 25px 0; }
-        .btn { background: var(--main-color); color: #000; border: none; padding: 15px; font-size: 18px; font-weight: 900; border-radius: 15px; cursor: pointer; width: 100%; margin: 10px 0; transition: 0.3s; }
+        /* Верхняя панель */
+        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; align-items: center; padding: 0 15px; z-index: 100; }
+        .menu-btn { font-size: 28px; cursor: pointer; }
         
-        #win-effect { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.1); z-index: 200; justify-content: center; align-items: center; }
-        .win-text { font-size: 60px; font-weight: 900; color: #fff; text-shadow: 0 0 30px var(--main-color); animation: bounce 0.5s infinite alternate; }
-        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.2); } }
+        /* Боковое меню */
+        #menu { position: fixed; top: 0; left: -280px; width: 240px; height: 100%; background: #111; border-right: 2px solid var(--mc); transition: 0.4s; z-index: 200; padding: 20px; text-align: left; box-shadow: 5px 0 15px #000; }
+        #menu.open { left: 0; }
+        .menu-item { background: #222; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; cursor: pointer; transition: 0.2s; }
+        .menu-item:active { background: #333; }
+
+        /* Игровой интерфейс */
+        .main { padding-top: 80px; }
+        .balance-display { font-size: 24px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 10px var(--sh); }
+        .slot-machine { background: #111; border: 4px solid var(--mc); border-radius: 25px; padding: 20px; display: inline-block; box-shadow: 0 0 30px var(--sh); }
+        .slots { font-size: 60px; margin: 20px 0; min-width: 200px; height: 80px; }
+        
+        /* Ставки */
+        .bet-box { margin: 15px 0; display: flex; justify-content: center; gap: 10px; }
+        .bet-btn { background: #222; border: 1px solid var(--mc); color: var(--mc); padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        .bet-btn.active { background: var(--mc); color: #000; font-weight: bold; }
+
+        .spin-btn { background: var(--mc); color: #000; border: none; padding: 15px 40px; font-size: 22px; font-weight: 900; border-radius: 15px; cursor: pointer; box-shadow: 0 4px 0 #8b6508; }
+        .spin-btn:disabled { opacity: 0.5; transform: translateY(2px); }
+
+        /* Настройки в меню */
+        .sett-label { font-size: 14px; color: #888; margin: 10px 0 5px; }
+        .color-dots { display: flex; gap: 8px; margin-bottom: 15px; }
+        .dot { width: 25px; height: 25px; border-radius: 50%; border: 1px solid #fff; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="win-effect"><div class="win-text">WIN! 🎉</div></div>
-    <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+    <div class="header"><div class="menu-btn" onclick="toggleM()">☰</div></div>
 
-    <div id="side-menu">
-        <h3 id="user-name">Игрок</h3>
-        <p>💰 Баланс: <span id="menu-balance">100</span> G</p>
-        <hr border="1" color="#333">
-        <p>Выбери стиль:</p>
-        <div class="color-picker">
-            <div class="color-dot" style="background: #ffd700;" onclick="changeTheme('#ffd700', 'rgba(255, 215, 0, 0.5)')"></div>
-            <div class="color-dot" style="background: #00ff00;" onclick="changeTheme('#00ff00', 'rgba(0, 255, 0, 0.5)')"></div>
-            <div class="color-dot" style="background: #008cff;" onclick="changeTheme('#008cff', 'rgba(0, 140, 255, 0.5)')"></div>
-            <div class="color-dot" style="background: #ff0000;" onclick="changeTheme('#ff0000', 'rgba(255, 0, 0, 0.5)')"></div>
+    <div id="menu">
+        <h2 id="u-name" style="color:#fff; margin-bottom:5px;">Игрок</h2>
+        <div class="menu-item" onclick="view('prof')">👤 Профиль</div>
+        <div id="prof-sub" style="display:none; padding-left:15px;">
+            <div class="menu-item" onclick="tgAlert('Вывод от 1000 G')">💰 Вывод</div>
+            <div class="menu-item" onclick="tgAlert('Пополнение временно недоступно')">💳 Пополнить</div>
+            <div class="menu-item" onclick="promo()">🎁 Промокод</div>
         </div>
-        <button class="btn" onclick="openPromo()">ПРОМОКОД</button>
-        <button class="btn" onclick="withdraw()">ВЫВОД</button>
-        <button class="btn" onclick="toggleMenu()" style="background: #333; color: #fff;">НАЗАД</button>
+
+        <div class="sett-label">ЦВЕТ ТЕМЫ:</div>
+        <div class="color-dots">
+            <div class="dot" style="background:#ffd700" onclick="setT('#ffd700')"></div>
+            <div class="dot" style="background:#00ff00" onclick="setT('#00ff00')"></div>
+            <div class="dot" style="background:#008cff" onclick="setT('#008cff')"></div>
+            <div class="dot" style="background:#ff3333" onclick="setT('#ff3333')"></div>
+        </div>
+
+        <div class="sett-label">ЭФФЕКТЫ:</div>
+        <select onchange="setEff(this.value)" style="width:100%; padding:8px; background:#222; color:#fff; border-radius:8px;">
+            <option value="G">Золотые монеты</option>
+            <option value="❄️">Снежинки</option>
+            <option value="🌸">Сакура</option>
+            <option value="🍀">Клевер</option>
+        </select>
+
+        <button class="btn" onclick="toggleM()" style="margin-top:30px; width:100%; padding:10px; background:#333; color:#fff; border:none; border-radius:10px;">ЗАКРЫТЬ</button>
     </div>
 
-    <div style="padding-top: 80px;">
-        <h1 id="main-title">GOLDEN CASINO</h1>
-        <div class="slot-box">
-            <div class="slots" id="display">🎰🎰🎰</div>
-            <button class="btn" id="spin-btn" onclick="spin()" style="font-size: 24px;">КРУТИТЬ</button>
+    <div class="main">
+        <div class="balance-display">БАЛАНС: <span id="bal">100</span> G</div>
+        <div class="slot-machine">
+            <div class="slots" id="screen">🎰🎰🎰</div>
+            <div class="bet-box">
+                <div class="bet-btn active" onclick="setBet(10, this)">10</div>
+                <div class="bet-btn" onclick="setBet(50, this)">50</div>
+                <div class="bet-btn" onclick="setBet(100, this)">100</div>
+            </div>
+            <button class="spin-btn" id="s-btn" onclick="play()">КРУТИТЬ</button>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let balance = 100;
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Игрок";
+        let bal = 100; let curBet = 10; let curEff = 'G';
+        document.getElementById('u-name').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Игрок";
 
-        function toggleMenu() { document.getElementById('side-menu').classList.toggle('active'); }
-        
-        function changeTheme(color, shadow) {
-            document.documentElement.style.setProperty('--main-color', color);
-            document.documentElement.style.setProperty('--shadow', shadow);
-            tg.HapticFeedback.impactOccurred('medium');
+        function toggleM() { document.getElementById('menu').classList.toggle('open'); }
+        function view(id) { let s = document.getElementById('prof-sub'); s.style.display = s.style.display === 'none' ? 'block' : 'none'; }
+        function tgAlert(t) { tg.showAlert(t); }
+
+        function setT(c) {
+            document.documentElement.style.setProperty('--mc', c);
+            document.documentElement.style.setProperty('--sh', c + '66');
         }
 
-        function spin() {
-            if (balance < 10) { tg.showAlert("Мало золота!"); return; }
-            balance -= 10; updateUI();
-            const btn = document.getElementById('spin-btn'); btn.disabled = true;
-            let i = 0; const s = ['💎', '7️⃣', '💰', '🍀', '👑'];
-            const t = setInterval(() => {
-                const r = [s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)]];
-                document.getElementById('display').innerText = r.join('');
-                if (++i >= 10) {
-                    clearInterval(t); btn.disabled = false;
-                    if (r[0] === r[1] && r[1] === r[2]) { balance += 150; showWin(); updateUI(); }
+        function setEff(v) { curEff = v; }
+        function setBet(v, el) {
+            curBet = v;
+            document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function play() {
+            if (bal < curBet) { tg.showAlert("Недостаточно средств!"); return; }
+            bal -= curBet; updateUI();
+            let btn = document.getElementById('s-btn'); btn.disabled = true;
+            
+            let count = 0;
+            const symbols = ['💎', '💰', '7️⃣', '🍒', '🍀'];
+            const roll = setInterval(() => {
+                const res = [symbols[Math.floor(Math.random()*5)], symbols[Math.floor(Math.random()*5)], symbols[Math.floor(Math.random()*5)]];
+                document.getElementById('screen').innerText = res.join('');
+                if (++count >= 12) {
+                    clearInterval(roll);
+                    btn.disabled = false;
+                    // ШАНС 37% на победу
+                    if (Math.random() < 0.37) {
+                        const winSym = symbols[Math.floor(Math.random()*5)];
+                        document.getElementById('screen').innerText = winSym + winSym + winSym;
+                        bal += curBet * 4;
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert("ПОБЕДА! +" + (curBet * 4) + " G");
+                    }
+                    updateUI();
                 }
-            }, 100);
+            }, 80);
         }
 
-        function showWin() { 
-            document.getElementById('win-effect').style.display = 'flex'; 
-            tg.HapticFeedback.notificationOccurred('success');
-            setTimeout(() => { document.getElementById('win-effect').style.display = 'none'; }, 2000); 
+        function updateUI() { document.getElementById('bal').innerText = bal; }
+
+        function promo() {
+            let c = prompt("Введи код:");
+            if (c && c.toUpperCase() === "BOGDAN_BOSS") { bal += 5000; updateUI(); tgAlert("Босс в здании! +5000 G"); }
         }
 
-        function updateUI() { document.getElementById('menu-balance').innerText = balance; }
-        function openPromo() { /* старая функция */ }
-        function withdraw() { tg.showAlert("Вывод от 1000 G"); }
         setInterval(() => {
-            const c = document.createElement('div'); c.className = 'coin'; c.innerText = 'G';
-            c.style.left = Math.random() * 100 + 'vw'; c.style.animationDuration = '3s';
-            document.body.appendChild(c); setTimeout(() => c.remove(), 3000);
-        }, 300);
+            const p = document.createElement('div'); p.className = 'particle';
+            p.innerText = curEff; p.style.left = Math.random() * 100 + 'vw';
+            p.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            document.body.appendChild(p); setTimeout(() => p.remove(), 5000);
+        }, 400);
         updateUI();
     </script>
 </body>
