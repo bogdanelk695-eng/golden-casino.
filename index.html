@@ -13,7 +13,7 @@
         .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; box-sizing: border-box; }
         .menu-btn, .sett-btn { font-size: 30px; cursor: pointer; color: var(--mc); filter: drop-shadow(0 0 5px var(--sh)); }
         
-        .side-panel { position: fixed; top: 0; width: 260px; height: 100%; background: #0f0f0f; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200; padding: 20px; text-align: left; box-shadow: 0 0 25px #000; box-sizing: border-box; }
+        .side-panel { position: fixed; top: 0; width: 280px; height: 100%; background: #0f0f0f; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200; padding: 20px; text-align: left; box-shadow: 0 0 25px #000; box-sizing: border-box; }
         #menu { left: -300px; border-right: 2px solid var(--mc); }
         #sett { right: -300px; border-left: 2px solid var(--mc); }
         .open#menu { left: 0; }
@@ -21,18 +21,19 @@
 
         .item { background: #1a1a1a; padding: 14px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid #333; font-weight: bold; }
         .sub-box { display: none; padding-left: 15px; margin-bottom: 10px; border-left: 2px solid #333; }
-        .sub-btn { padding: 10px; color: #ccc; font-size: 14px; cursor: pointer; border-bottom: 1px solid #222; }
+        .sub-btn { padding: 12px; color: #ccc; font-size: 14px; cursor: pointer; border-bottom: 1px solid #222; }
 
         .main { padding-top: 70px; }
         .slot-machine { background: #0a0a0a; border: 3px solid var(--mc); border-radius: 35px; padding: 25px; display: inline-block; box-shadow: 0 0 40px var(--sh); }
         .slots { font-size: 60px; margin: 15px 0; min-height: 80px; }
         
         .bet-input { background: #111; border: 2px solid var(--mc); color: #fff; padding: 12px; border-radius: 10px; width: 140px; font-size: 18px; text-align: center; margin: 10px 0; outline: none; }
-        .b-btn { background: #111; border: 1px solid var(--mc); color: var(--mc); padding: 8px 18px; border-radius: 10px; font-weight: bold; transition: 0.2s; cursor: pointer; }
+        .b-btn { background: #111; border: 1px solid var(--mc); color: var(--mc); padding: 8px 18px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         .b-btn.active { background: var(--mc); color: #000; box-shadow: 0 0 15px var(--sh); }
         .play-btn { background: var(--mc); color: #000; border: none; padding: 18px 60px; font-size: 24px; font-weight: 900; border-radius: 20px; cursor: pointer; margin-top: 15px; text-transform: uppercase; }
 
-        #msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; display: none; z-index: 1000; border: 1px solid #fff; }
+        #msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 12px 25px; border-radius: 30px; font-weight: bold; display: none; z-index: 1000; border: 1px solid #fff; width: 80%; font-size: 14px; }
+        .color-dot { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -44,16 +45,17 @@
 
     <div id="menu" class="side-panel">
         <h2 id="name-tag" style="margin-top:40px; color:#fff;">Игрок</h2>
+        
         <div class="item" onclick="showSub('p-items')">👤 ПРОФИЛЬ</div>
         <div id="p-items" class="sub-box">
             <div class="sub-btn" onclick="showSub('dep-items')">💳 ПОПОЛНИТЬ</div>
             <div id="dep-items" class="sub-box">
-                <div class="sub-btn" onclick="msg('Реквизиты UA: Ожидание...')">🇺🇦 Гривны (UA)</div>
-                <div class="sub-btn" onclick="msg('Реквизиты RU: Ожидание...')">🇷🇺 Рубли (RU)</div>
-                <div class="sub-btn" onclick="msg('Адрес TON: Ожидание...')">💎 Крипта (TON)</div>
+                <div class="sub-btn" onclick="msg('Пополнение UA пока недоступно')">🇺🇦 Гривны (UA)</div>
+                <div class="sub-btn" onclick="msg('Пополнение RU пока недоступно')">🇷🇺 Рубли (RU)</div>
+                <div class="sub-btn" onclick="showCrypto()">💎 Крипта (TON)</div>
             </div>
-            <div class="sub-btn" onclick="withdraw()">💰 ВЫВОД (от 300)</div>
-            <div class="sub-btn" onclick="showSub('v-items')">💱 СМЕНА ВАЛЮТЫ</div>
+            <div class="sub-btn" onclick="withdraw()">💰 ВЫВОД (от 100)</div>
+            <div class="sub-btn" onclick="showSub('v-items')">💱 ВАЛЮТА</div>
             <div id="v-items" class="sub-box">
                 <div class="sub-btn" onclick="setV('RUB')">₽ RUB</div>
                 <div class="sub-btn" onclick="setV('UAH')">₴ UAH</div>
@@ -61,31 +63,35 @@
             </div>
             <div class="sub-btn" onclick="promo()">🎁 ПРОМОКОД</div>
         </div>
-        <div style="margin: 20px 0 10px; font-size: 12px; color: #666;">ТЕМА:</div>
-        <div style="display:flex; gap:10px;">
-            <div onclick="setT('#ffd700')" style="width:35px;height:35px;background:#ffd700;border-radius:50%;border:2px solid #fff;"></div>
-            <div onclick="setT('#ff3333')" style="width:35px;height:35px;background:#ff3333;border-radius:50%;border:2px solid #fff;"></div>
-            <div onclick="setT('#a020f0')" style="width:35px;height:35px;background:#a020f0;border-radius:50%;border:2px solid #fff;"></div>
-            <div onclick="setT('#ffffff')" style="width:35px;height:35px;background:#ffffff;border-radius:50%;border:2px solid #fff;"></div>
+
+        <div class="item" onclick="showSub('eff-items')">✨ ЦВЕТА И ЭФФЕКТЫ</div>
+        <div id="eff-items" class="sub-box">
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; padding:10px 0;">
+                <div onclick="setT('#ffd700', '💰')" class="color-dot" style="background:#ffd700;"></div>
+                <div onclick="setT('#ff3333', '💎')" class="color-dot" style="background:#ff3333;"></div>
+                <div onclick="setT('#a020f0', '🌸')" class="color-dot" style="background:#a020f0;"></div>
+                <div onclick="setT('#ffffff', '❄️')" class="color-dot" style="background:#ffffff;"></div>
+            </div>
         </div>
+
         <button onclick="toggleP('menu')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">⬅️ НАЗАД</button>
     </div>
 
     <div id="sett" class="side-panel">
         <h2 style="margin-top:40px;">НАСТРОЙКИ</h2>
-        <div class="item">🇷🇺 РУССКИЙ (АКТИВЕН)</div>
+        <div class="item">🇷🇺 РУССКИЙ</div>
         <button onclick="toggleP('sett')" class="item" style="margin-top:40px; width:100%; background:#333; color:#fff; border:none;">ОК</button>
     </div>
 
     <div class="main">
         <div class="bal-box">
             <div style="font-size:14px; opacity:0.7;">БАЛАНС</div>
-            <div style="font-size:36px; font-weight:900;"><span id="bal">100.00</span> <span id="v-sym">UAH</span></div>
+            <div style="font-size:36px; font-weight:900;"><span id="bal">15.00</span> <span id="v-sym">UAH</span></div>
         </div>
         <div class="slot-machine">
             <div class="slots" id="scr">🎰🎰🎰</div>
             <div style="font-size:11px; opacity:0.6;">ВАША СТАВКА:</div>
-            <input type="number" id="bet-val" class="bet-input" value="10">
+            <input type="number" id="bet-val" class="bet-input" value="5">
             <div style="font-size:11px; margin-top:10px; opacity:0.6;">РИСК:</div>
             <div style="display:flex; justify-content:center; gap:10px; margin:10px 0;">
                 <div class="b-btn active" onclick="setX(1, this)">X1</div>
@@ -98,10 +104,9 @@
 
     <script>
         let tg = window.Telegram.WebApp;
-        let bal = 100; // База в UAH
+        let bal = 15; 
         let curX = 1; let curV = 'UAH';
-        
-        // Курсы относительно UAH
+        let currentEffect = '💰'; 
         const rates = { 'UAH': 1, 'RUB': 2.5, 'TON': 0.005 };
 
         document.getElementById('name-tag').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "Игрок";
@@ -117,36 +122,34 @@
             e.style.display = (e.style.display === 'none' || e.style.display === '') ? 'block' : 'none'; 
         }
 
+        function setT(c, eff) { 
+            document.documentElement.style.setProperty('--mc', c); 
+            document.documentElement.style.setProperty('--sh', c+'66'); 
+            currentEffect = eff;
+            msg("Стиль изменен!");
+        }
+
         function setV(newV) {
-            // Конвертация баланса: (баланс / старый курс) * новый курс
             bal = (bal / rates[curV]) * rates[newV];
             curV = newV;
             document.getElementById('v-sym').innerText = curV;
             update();
-            msg("Валюта изменена на " + curV);
         }
 
-        function setT(c) { 
-            document.documentElement.style.setProperty('--mc', c); 
-            document.documentElement.style.setProperty('--sh', c+'66'); 
-        }
-
-        function setX(v, el) { 
-            curX = v; 
-            document.querySelectorAll('.b-btn').forEach(b=>b.classList.remove('active')); 
-            el.classList.add('active'); 
+        function showCrypto() {
+            alert("Кошелек TON для пополнения:\n\nUQBXsDXoFMFD3752_K-87KOPztj5KbTrQq9irD32bUEAMQ3L\n\nПосле оплаты администрация проверит транзакцию в ближайшее время.");
         }
 
         function msg(t) { 
             let m = document.getElementById('msg'); 
             m.innerText = t; m.style.display = 'block'; 
-            setTimeout(()=>m.style.display='none', 2500); 
+            setTimeout(()=>m.style.display='none', 4000); 
         }
 
         function play() {
             let bet = parseFloat(document.getElementById('bet-val').value);
-            if (isNaN(bet) || bet <= 0) { msg("ВВЕДИТЕ СУММУ!"); return; }
-            if (bal < bet) { msg("МАЛО СРЕДСТВ!"); return; }
+            if (isNaN(bet) || bet <= 0) { msg("УКАЖИТЕ СТАВКУ!"); return; }
+            if (bal < bet) { msg("НЕДОСТАТОЧНО СРЕДСТВ!"); return; }
             
             bal -= bet; update();
             let btn = document.getElementById('p-btn'); btn.disabled = true;
@@ -156,8 +159,6 @@
                 document.getElementById('scr').innerText = r.join('');
                 if (++i >= 12) {
                     clearInterval(t); btn.disabled = false;
-                    
-                    // Шансы: < 100 (в текущей валюте) - 30%, иначе 15%
                     let limit = 100 * rates[curV]; 
                     let winChance = (bet < limit) ? 0.30 : 0.15;
                     if(curX === 2) winChance *= 0.5;
@@ -176,28 +177,29 @@
             }, 90);
         }
 
-        function update() { 
-            document.getElementById('bal').innerText = bal.toFixed(2); 
-        }
+        function update() { document.getElementById('bal').innerText = bal.toFixed(2); }
         
         function withdraw() { 
-            let min = 300 * rates[curV];
-            if (bal < min) { msg("МИН. ВЫВОД: " + min.toFixed(0) + " " + curV); return; }
-            let a = prompt("Введите адрес для вывода:"); if(a) msg("Заявка отправлена!"); 
+            let min = 100 * rates[curV];
+            if (bal < min) { msg("МИНИМУМ НА ВЫВОД: " + min.toFixed(0) + " " + curV); return; }
+            let wallet = prompt("Введите номер карты или кошелька для вывода:");
+            if(wallet) {
+                alert("Заявка на вывод средств (" + wallet + ") принята. Ожидайте обработки.");
+            }
         }
 
         function promo() { 
             let p = prompt("Введите промокод:"); 
-            if(p && p.toUpperCase()==='TON') { 
-                bal += (500 * rates[curV]); 
-                update(); msg("+ бонус в " + curV); 
-            } 
+            if(!p) return;
+            let c = p.toUpperCase();
+            if(c === 'JACKPOT') { bal += (1000 * rates[curV]); update(); msg("JACKPOT! +1000 " + curV); }
+            else if(c === 'TON') { bal += (500 * rates[curV]); update(); msg("Бонус +500 " + curV); }
+            else { msg("НЕВЕРНЫЙ КОД"); }
         }
 
-        // ЭФФЕКТЫ (МОНЕТКИ)
         setInterval(() => {
             const p = document.createElement('div'); p.className = 'particle';
-            p.innerText = (curV === 'TON') ? '💎' : '💰'; 
+            p.innerText = currentEffect; 
             p.style.left = Math.random()*100+'vw';
             p.style.animationDuration = (Math.random()*2+3)+'s';
             document.body.appendChild(p); setTimeout(()=>p.remove(), 5000);
@@ -206,4 +208,5 @@
         update(); tg.expand();
     </script>
 </body>
-</html>
+        </html>
+    
