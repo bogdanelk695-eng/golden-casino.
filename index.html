@@ -5,57 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); --bg-menu: #0f0f0f; --txt-menu: #fff; }
+        :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); --bg-menu: #0f0f0f; }
         * { -webkit-tap-highlight-color: transparent; outline: none; box-sizing: border-box; }
         body { background: #000; color: var(--mc); text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
         
-        /* Твои частицы */
+        /* Частицы */
         .particle { position: absolute; top: -20px; user-select: none; z-index: -1; animation: fall linear infinite; font-size: 22px; }
         @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
 
-        /* Твоя загрузка */
+        /* Загрузка */
         #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 10000; transition: 0.8s; }
-        .loader-box { border: 3px solid var(--mc); padding: 30px; border-radius: 15px; background: rgba(0,0,0,0.8); box-shadow: 0 0 30px var(--sh); animation: pulse 2s infinite; font-weight: 900; letter-spacing: 5px; }
+        .loader-box { border: 3px solid var(--mc); padding: 30px; border-radius: 15px; box-shadow: 0 0 30px var(--sh); animation: pulse 2s infinite; font-weight: 900; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        #loading-screen.fade-out { opacity: 0; pointer-events: none; }
 
-        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; }
-        .menu-btn, .sett-btn { font-size: 32px; cursor: pointer; color: var(--mc); }
+        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; background: rgba(0,0,0,0.8); }
+        .menu-btn { font-size: 30px; cursor: pointer; }
+
+        /* ЛОББИ (Фикс бага со скрина 16260) */
+        #lobby { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; transition: 0.5s; }
+        .game-card { width: 85%; background: #111; border: 2px solid var(--mc); border-radius: 20px; padding: 25px; cursor: pointer; box-shadow: 0 0 15px var(--sh); transition: 0.3s; }
+        .game-card:active { transform: scale(0.95); }
+
+        /* Экраны игр */
+        .screen { display: none; height: 100vh; flex-direction: column; justify-content: center; align-items: center; padding-top: 60px; }
+        .back-btn { position: absolute; top: 70px; left: 20px; background: none; border: 1px solid var(--mc); color: var(--mc); padding: 8px 15px; border-radius: 10px; font-size: 12px; }
+
+        /* БАНКОМАТ */
+        .slot-machine { background: #050505; border: 4px solid var(--mc); border-radius: 40px; padding: 30px; box-shadow: 0 0 50px var(--sh); }
+        .slots { font-size: 60px; margin-bottom: 20px; height: 80px; }
+
+        /* КОЛЕСО (Нормальное кручение) */
+        .wheel-container { position: relative; width: 280px; height: 280px; margin-bottom: 20px; }
+        .wheel-circle { width: 100%; height: 100%; border: 8px solid var(--mc); border-radius: 50%; position: relative; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 0 30px var(--sh); }
+        .wheel-item { position: absolute; width: 100%; text-align: center; top: 15px; transform-origin: 50% 125px; font-weight: 900; font-size: 20px; }
+        .pointer { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 45px; z-index: 10; filter: drop-shadow(0 0 5px red); }
+
+        .btn-play { background: var(--mc); color: #000; border: none; padding: 18px 60px; font-size: 22px; font-weight: 900; border-radius: 20px; cursor: pointer; margin-top: 20px; width: 200px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         
-        /* Твои панели */
-        .side-panel { position: fixed; top: 0; width: 280px; height: 100%; background: var(--bg-menu); color: var(--txt-menu); transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200; padding: 20px; text-align: left; box-shadow: 0 0 25px #000; overflow-y: auto; }
-        #menu { left: -300px; border-right: 2px solid var(--mc); }
-        #sett { right: -300px; border-left: 2px solid var(--mc); }
-        .open { transform: translateX(300px); }
-        .open#menu { left: 0; }
-        .open#sett { right: 0; }
+        #msg { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 15px 30px; border-radius: 40px; font-weight: 900; display: none; z-index: 5000; box-shadow: 0 0 20px #000; }
 
-        /* ГЛАВНЫЙ ЭКРАН */
-        .main { padding-top: 80px; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        
-        /* КАРТОЧКИ ВЫБОРА */
-        #game-selection { display: flex; flex-direction: column; gap: 15px; width: 85%; }
-        .game-card { background: #111; border: 2px solid var(--mc); border-radius: 20px; padding: 20px; cursor: pointer; box-shadow: 0 0 15px var(--sh); }
-
-        /* ИГРОВЫЕ ЭКРАНЫ */
-        .game-area { display: none; width: 100%; flex-direction: column; align-items: center; }
-        .slot-machine { background: #050505; border: 4px solid var(--mc); border-radius: 40px; padding: 25px; box-shadow: 0 0 50px var(--sh); }
-        .slots { font-size: 60px; margin-bottom: 20px; }
-
-        /* ВИЗУАЛ КОЛЕСА */
-        .wheel-wrap { position: relative; width: 220px; height: 220px; margin-bottom: 20px; }
-        .wheel-body { width: 100%; height: 100%; border: 6px solid var(--mc); border-radius: 50%; position: relative; transition: 3s cubic-bezier(0.1, 0, 0.2, 1); background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .wheel-item { position: absolute; width: 100%; text-align: center; top: 10px; transform-origin: 50% 100px; font-weight: 900; }
-        .wheel-pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: red; font-size: 30px; z-index: 10; }
-
-        .play-btn { background: var(--mc); color: #000; border: none; padding: 15px 50px; font-size: 22px; font-weight: 900; border-radius: 20px; cursor: pointer; margin-top: 15px; }
-        .back-btn { margin-top: 20px; color: #777; font-size: 14px; cursor: pointer; }
-
-        #msg { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 14px 30px; border-radius: 40px; font-weight: 900; display: none; z-index: 5000; }
-        
-        /* Профиль элементы */
-        .item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); font-weight: bold; }
-        .w-input { background: #000; border: 1px solid var(--mc); color: #fff; width: 100%; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+        /* Боковое меню */
+        .side-panel { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--bg-menu); z-index: 200; transition: 0.4s; padding: 20px; border-right: 2px solid var(--mc); }
+        .side-panel.open { left: 0; }
+        .menu-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
@@ -63,63 +55,55 @@
     <div id="msg"></div>
 
     <div class="header">
-        <div class="menu-btn" onclick="toggleP('menu')">☰</div>
-        <div style="font-size: 20px; font-weight: 900;" onclick="adm()">💰 <span id="bal">10.00</span></div>
-        <div class="sett-btn" onclick="toggleP('sett')">⚙️</div>
+        <div class="menu-btn" onclick="toggleM()">☰</div>
+        <div style="font-size: 22px; font-weight: 900;" onclick="adm()">💰 <span id="bal">10.00</span></div>
+        <div style="width: 30px;"></div>
     </div>
 
     <div id="menu" class="side-panel">
-        <div style="border: 2px solid var(--mc); padding: 12px; border-radius: 12px; margin: 40px 0 20px 0; text-align: center;">
-            <h2 id="name-tag">Игрок</h2>
-        </div>
-        <div class="item" onclick="msg('СКОРО ВЫВОД')">💰 ВЫВОД</div>
-        <div class="item" onclick="msg('СКОРО ПОПОЛНЕНИЕ')">💎 ПОПОЛНИТЬ</div>
-        <div class="item" onclick="setT('#ff3333')">🔴 КРАСНЫЙ</div>
-        <div class="item" onclick="setT('#ffd700')">🟡 ЗОЛОТОЙ</div>
-        <button onclick="toggleP('menu')" class="item" style="width:100%; background:var(--mc); color:#000;">ЗАКРЫТЬ</button>
+        <h2 style="margin-top:40px;">ПРОФИЛЬ</h2>
+        <div class="menu-item" id="user-n">Игрок</div>
+        <div class="menu-item" onclick="setT('#ffd700')">🟡 ЗОЛОТОЙ</div>
+        <div class="menu-item" onclick="setT('#ff3333')">🔴 КРАСНЫЙ</div>
+        <div class="menu-item" onclick="setT('#22ff22')">🟢 ЗЕЛЕНЫЙ</div>
+        <button onclick="toggleM()" class="btn-play" style="width:100%; margin-top:20px; font-size:16px; padding:15px;">ЗАКРЫТЬ</button>
     </div>
 
-    <div id="sett" class="side-panel">
-        <h2 style="margin-top:40px;">НАСТРОЙКИ</h2>
-        <div class="item">ЗВУК: ВКЛ</div>
-        <button onclick="toggleP('sett')" class="item" style="width:100%; background:#333; color:#fff;">НАЗАД</button>
+    <div id="lobby">
+        <h1 style="letter-spacing: 3px; font-size: 28px;">ВЫБЕРИТЕ ИГРУ</h1>
+        <div class="game-card" onclick="go('slot')">
+            <div style="font-size: 50px;">🎰</div>
+            <h2>БАНКОМАТ</h2>
+            <p style="opacity: 0.5;">Удачные слоты</p>
+        </div>
+        <div class="game-card" onclick="go('wheel')">
+            <div style="font-size: 50px;">🎡</div>
+            <h2>КОЛЕСО</h2>
+            <p style="opacity: 0.5;">Шанс x2 (20%)</p>
+        </div>
     </div>
 
-    <div class="main">
-        <div id="game-selection">
-            <h2 style="letter-spacing: 2px;">ВЫБЕРИТЕ ИГРУ</h2>
-            <div class="game-card" onclick="showGame('slot')">
-                <span style="font-size:40px;">🎰</span>
-                <h3>БАНКОМАТ</h3>
-            </div>
-            <div class="game-card" onclick="showGame('wheel')">
-                <span style="font-size:40px;">🎡</span>
-                <h3>КОЛЕСО</h3>
-            </div>
+    <div id="scr-slot" class="screen">
+        <button class="back-btn" onclick="goLobby()">← В ЛОББИ</button>
+        <div class="slot-machine">
+            <div class="slots" id="slot-res">🎰🎰🎰</div>
+            <button class="btn-play" onclick="playSlot()">КРУТИТЬ (2)</button>
         </div>
+    </div>
 
-        <div id="area-slot" class="game-area">
-            <div class="slot-machine">
-                <div class="slots" id="slot-res">🎰🎰🎰</div>
-                <button class="play-btn" onclick="playSlot()">КРУТИТЬ (2)</button>
+    <div id="scr-wheel" class="screen">
+        <button class="back-btn" onclick="goLobby()">← В ЛОББИ</button>
+        <div class="wheel-container">
+            <div class="pointer">▼</div>
+            <div id="wheel-obj" class="wheel-circle">
+                <div class="wheel-item" style="transform: rotate(0deg);">x2</div>
+                <div class="wheel-item" style="transform: rotate(72deg);">ПУСТО</div>
+                <div class="wheel-item" style="transform: rotate(144deg);">ПУСТО</div>
+                <div class="wheel-item" style="transform: rotate(216deg);">ПУСТО</div>
+                <div class="wheel-item" style="transform: rotate(288deg);">ПУСТО</div>
             </div>
-            <div class="back-btn" onclick="showLobby()">← В МЕНЮ</div>
         </div>
-
-        <div id="area-wheel" class="game-area">
-            <div class="wheel-wrap">
-                <div class="wheel-pointer">▼</div>
-                <div id="wheel-obj" class="wheel-body">
-                    <div class="wheel-item" style="transform: rotate(0deg); color: var(--mc);">x2</div>
-                    <div class="wheel-item" style="transform: rotate(72deg);">ПУСТО</div>
-                    <div class="wheel-item" style="transform: rotate(144deg);">ПУСТО</div>
-                    <div class="wheel-item" style="transform: rotate(216deg);">ПУСТО</div>
-                    <div class="wheel-item" style="transform: rotate(288deg);">ПУСТО</div>
-                </div>
-            </div>
-            <button class="play-btn" onclick="playWheel()">КРУТИТЬ (5)</button>
-            <div class="back-btn" onclick="showLobby()">← В МЕНЮ</div>
-        </div>
+        <button class="btn-play" id="wheel-btn" onclick="playWheel()">ИГРАТЬ (5)</button>
     </div>
 
     <script>
@@ -130,56 +114,69 @@
         function update() { document.getElementById('bal').innerText = bal.toFixed(2); localStorage.setItem('gb_bal', bal); }
         function msg(t) { let m = document.getElementById('msg'); m.innerText = t; m.style.display = 'block'; setTimeout(()=>m.style.display='none', 2000); }
 
-        window.onload = () => { setTimeout(() => document.getElementById('loading-screen').classList.add('fade-out'), 2500); };
+        window.onload = () => { 
+            setTimeout(() => document.getElementById('loading-screen').style.opacity='0', 2000); 
+            setTimeout(() => document.getElementById('loading-screen').style.display='none', 2800); 
+            document.getElementById('user-n').innerText = tg.initDataUnsafe.user?.first_name || "Игрок";
+        };
 
-        function showGame(g) {
-            document.getElementById('game-selection').style.display = 'none';
-            document.getElementById('area-' + g).style.display = 'flex';
-        }
-        function showLobby() {
-            document.querySelectorAll('.game-area').forEach(a => a.style.display = 'none');
-            document.getElementById('game-selection').style.display = 'flex';
-        }
+        function go(s) { document.getElementById('lobby').style.display='none'; document.getElementById('scr-'+s).style.display='flex'; }
+        function goLobby() { document.querySelectorAll('.screen').forEach(s=>s.style.display='none'); document.getElementById('lobby').style.display='flex'; }
+        function toggleM() { document.getElementById('menu').classList.toggle('open'); }
+        function setT(c) { document.documentElement.style.setProperty('--mc', c); }
+        function adm() { aC++; if(aC>=5) { bal += 500; update(); msg("АДМИН +500!"); aC=0; } }
 
+        // БАНКОМАТ
         function playSlot() {
-            if(bal < 2) return msg("МАЛО СРЕДСТВ");
+            if(bal < 2) return msg("МАЛО ДЕНЕГ");
             bal -= 2; update();
-            let i = 0; const s = ['💎','💰','7️⃣','🍒'];
+            let i = 0; const s = ['💎','💰','7️⃣','🍒','🍀'];
             const t = setInterval(() => {
-                document.getElementById('slot-res').innerText = [s[Math.floor(Math.random()*4)], s[Math.floor(Math.random()*4)], s[Math.floor(Math.random()*4)]].join('');
+                document.getElementById('slot-res').innerText = [s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)], s[Math.floor(Math.random()*5)]].join('');
                 if(++i >= 12) {
                     clearInterval(t);
-                    if(Math.random() < 0.15) { bal += 10; msg("ВЫИГРЫШ x5!"); }
+                    if(Math.random() < 0.15) { bal += 15; msg("ВЫИГРЫШ 15!"); }
                     update();
                 }
             }, 100);
         }
 
+        // КОЛЕСО (Нормальное кручение 80/20)
         function playWheel() {
-            if(bal < 5) return msg("МАЛО СРЕДСТВ");
+            if(bal < 5) return msg("МАЛО ДЕНЕГ");
+            let btn = document.getElementById('wheel-btn');
+            if(btn.disabled) return;
+            
             bal -= 5; update();
+            btn.disabled = true;
+
             let w = document.getElementById('wheel-obj');
-            let win = Math.random() < 0.20; // Шанс 20%
-            let deg = win ? 1800 : (1800 + 72 + Math.floor(Math.random()*4)*72);
-            w.style.transform = `rotate(${deg}deg)`;
+            let isWin = Math.random() < 0.20; // 20% шанс
+            // 0 градусов - это x2, остальные - пусто
+            let baseDeg = 3600; // 10 полных кругов
+            let finalDeg = isWin ? baseDeg : (baseDeg + 72 + Math.floor(Math.random()*4)*72);
+            
+            w.style.transform = `rotate(${finalDeg}deg)`;
+
             setTimeout(() => {
-                if(win) { bal += 10; msg("WIN x2!"); } else { msg("ПУСТО"); }
+                w.style.transition = 'none';
+                w.style.transform = `rotate(${finalDeg % 360}deg)`;
+                setTimeout(() => w.style.transition = 'transform 4s cubic-bezier(0.15, 0, 0.15, 1)', 50);
+                
+                if(isWin) { bal += 10; msg("ПОБЕДА x2 (10 UAH)!"); }
+                else { msg("ПУСТО..."); }
                 update();
-            }, 3000);
+                btn.disabled = false;
+            }, 4100);
         }
 
-        function toggleP(id) { document.getElementById(id).classList.toggle('open'); }
-        function setT(c) { document.documentElement.style.setProperty('--mc', c); }
-        function adm() { aC++; if(aC>=5) { bal += 100; update(); msg("АДМИН +100"); aC=0; } }
-
-        // Твои частицы
+        // Частицы
         setInterval(() => {
             const p = document.createElement('div'); p.className = 'particle'; p.innerText = '💰';
             p.style.left = Math.random()*100+'vw'; p.style.animationDuration = '4s';
             document.body.appendChild(p); setTimeout(()=>p.remove(), 4000);
-        }, 600);
+        }, 700);
 
-        document.getElementById('name-tag').innerText = tg.initDataUnsafe.user?.first_name || "Игрок";
         update(); tg.expand();
     </script>
 </body>
