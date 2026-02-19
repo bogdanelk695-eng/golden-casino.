@@ -5,223 +5,168 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --mc: #ffd700; --sh: rgba(255, 215, 0, 0.4); --bg: #0b0b0b; }
-        * { -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; outline: none; }
+        :root { --mc: #ffd700; --bg: #0b0b0b; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; outline: none; user-select: none; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
         
-        .particle { position: absolute; top: -30px; z-index: -1; animation: fall linear infinite; pointer-events: none; }
-        @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
+        #bg-fx { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .particle { position: absolute; top: -30px; animation: fall linear infinite; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
 
-        .header { position: fixed; top: 0; width: 100%; height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: rgba(0,0,0,0.9); z-index: 100; border-bottom: 2px solid var(--mc); }
-        .icon-btn { font-size: 28px; cursor: pointer; color: var(--mc); }
-
-        .panel { position: fixed; top: 0; left: -100%; width: 100%; height: 100%; background: var(--bg); z-index: 200; transition: 0.3s ease; padding: 70px 20px 20px; overflow-y: auto; }
-        .panel.active { left: 0; }
-        .sub-panel { display: none; flex-direction: column; align-items: center; width: 100%; }
-        .sub-panel.active { display: flex; }
-
-        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 10px; width: 100%; border-left: 4px solid var(--mc); }
-        .btn { background: var(--mc); color: #000; border: none; padding: 14px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-
-        .grid-select { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin: 15px 0; }
-        .sq-btn { aspect-ratio: 1/1; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
-
-        .main-ui { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
-        .bal-display { font-size: 44px; font-weight: 900; color: var(--mc); text-shadow: 0 0 15px var(--sh); }
+        .ui-wrapper { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; }
+        .header { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--mc); }
         
-        /* ОБНОВЛЕННОЕ КОЛЕСО */
-        .wheel-wrap { position: relative; width: 220px; height: 220px; margin: 20px auto; }
+        .panel { position: fixed; top: 0; width: 100%; height: 100%; background: var(--bg); z-index: 200; transition: 0.4s; padding: 70px 20px; display: none; overflow-y: auto; }
+        .panel.active { display: block; }
+        .left { left: -100%; } .left.active { left: 0; }
+        .right { right: -100%; } .right.active { right: 0; }
+
+        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--mc); }
+        .btn { background: var(--mc); color: #000; border: none; padding: 14px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; margin-top: 10px; }
+        .inp { background: #1a1a1a; border: 1px solid var(--mc); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin: 5px 0; text-align: center; font-size: 18px; }
+
+        /* КОЛЕСО 8 СЛОТОВ */
+        .wheel-wrap { position: relative; width: 240px; height: 240px; margin: 20px auto; }
         .wheel-body { 
-            width: 100%; height: 100%; 
-            border: 8px solid var(--mc); 
-            border-radius: 50%; 
-            position: relative; 
-            transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); 
-            background: #111; 
-            overflow: hidden; 
-            box-shadow: 0 0 20px var(--sh);
+            width: 100%; height: 100%; border: 6px solid var(--mc); border-radius: 50%; 
+            position: relative; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); 
+            background: #111; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        
-        /* Полоски секторов */
-        .wheel-line {
-            position: absolute; width: 2px; height: 50%; 
-            background: var(--mc); left: 50%; top: 0; 
-            transform-origin: bottom center; opacity: 0.5;
+        .wheel-line { 
+            position: absolute; width: 2px; height: 50%; background: var(--mc); 
+            left: calc(50% - 1px); top: 0; transform-origin: bottom center; opacity: 0.4; 
         }
-
         .wheel-sector { 
-            position: absolute; width: 100%; height: 100%;
-            text-align: center; font-size: 10px; font-weight: 900;
-            padding-top: 25px; text-transform: uppercase;
+            position: absolute; width: 100%; height: 100%; text-align: center; 
+            font-size: 10px; font-weight: 900; padding-top: 20px; text-transform: uppercase;
         }
+        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 40px; z-index: 50; filter: drop-shadow(0 0 5px #000); }
 
-        .pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: #ff3333; font-size: 40px; z-index: 10; filter: drop-shadow(0 0 5px #000); }
-
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 10px 25px; border-radius: 25px; font-weight: 900; display: none; z-index: 2000; }
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--mc); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: 900; display: none; z-index: 3000; }
     </style>
 </head>
 <body>
+    <div id="bg-fx"></div>
     <div id="toast"></div>
 
-    <div class="header">
-        <div class="icon-btn" onclick="openPanel('menu-panel')">☰</div>
-        <div style="font-weight: 900; letter-spacing: 1px;">GOLDEN CASINO</div>
-        <div class="icon-btn" onclick="openPanel('settings-panel')">⚙️</div>
-    </div>
-
-    <div class="main-ui">
-        <div style="opacity: 0.6; font-size: 12px;">ВАШ БАЛАНС</div>
-        <div class="bal-display"><span id="bal-val">10.00</span> <span id="cur-val">UAH</span></div>
-        
-        <div class="card" style="margin-top: 20px; width: 90%;">
-            <h3 style="margin:0 0 10px 0;">🎡 КОЛЕСО УДАЧИ</h3>
-            <div class="wheel-wrap">
-                <div class="pointer">▼</div>
-                <div id="wheel-obj" class="wheel-body">
-                    <div class="wheel-line" style="transform: rotate(45deg);"></div>
-                    <div class="wheel-line" style="transform: rotate(135deg);"></div>
-                    <div class="wheel-line" style="transform: rotate(225deg);"></div>
-                    <div class="wheel-line" style="transform: rotate(315deg);"></div>
-                    
-                    <div class="wheel-sector" style="transform: rotate(0deg);">WIN x2</div>
-                    <div class="wheel-sector" style="transform: rotate(90deg);">ПУСТО</div>
-                    <div class="wheel-sector" style="transform: rotate(180deg);">ПУСТО</div>
-                    <div class="wheel-sector" style="transform: rotate(270deg);">ПУСТО</div>
-                </div>
-            </div>
-            <button class="btn" id="w-btn" onclick="playWheel()">КРУТИТЬ (5 UAH)</button>
+    <div class="ui-wrapper">
+        <div class="header">
+            <div onclick="openP('menu-l')" style="font-size:25px">☰</div>
+            <div style="font-weight:900">GOLDEN BOT</div>
+            <div onclick="openP('admin-p')" style="font-size:25px">💎</div>
+        </div>
+        <div style="text-align:center; padding-top:40px">
+            <div style="opacity:0.6; font-size:12px">БАЛАНС</div>
+            <div style="font-size:45px; font-weight:900; color:var(--mc)"><span id="bal">0.00</span> UAH</div>
+            <button class="btn" style="width:80%; height:60px; font-size:20px; margin-top:20px" onclick="openP('wheel-game')">🎡 ИГРАТЬ</button>
         </div>
     </div>
 
-    <div id="menu-panel" class="panel">
-        <div id="menu-home" class="sub-panel active">
-            <div class="card" onclick="showSub('profile')">👤 МОЙ ПРОФИЛЬ</div>
-            <div class="card" onclick="showSub('design')">🎨 ДИЗАЙН И ЭФФЕКТЫ</div>
-            <button class="btn" style="background:#333; color:#fff" onclick="closePanels()">← НАЗАД</button>
-        </div>
-
-        <div id="profile" class="sub-panel">
-            <div class="card" style="text-align: center;">
-                <h2 id="u-name" style="margin:0">Игрок</h2>
-                <p style="opacity:0.5">ID: <span id="u-id">000000</span></p>
+    <div id="wheel-game" class="panel left">
+        <h3 style="text-align:center">🎡 КОЛЕСО ФОРТУНЫ</h3>
+        <div class="wheel-wrap">
+            <div class="pointer">▼</div>
+            <div id="w-obj" class="wheel-body">
+                <div class="wheel-line" style="transform: rotate(0deg)"></div>
+                <div class="wheel-line" style="transform: rotate(45deg)"></div>
+                <div class="wheel-line" style="transform: rotate(90deg)"></div>
+                <div class="wheel-line" style="transform: rotate(135deg)"></div>
+                <div class="wheel-line" style="transform: rotate(180deg)"></div>
+                <div class="wheel-line" style="transform: rotate(225deg)"></div>
+                <div class="wheel-line" style="transform: rotate(270deg)"></div>
+                <div class="wheel-line" style="transform: rotate(315deg)"></div>
+                <div class="wheel-sector" style="transform: rotate(22.5deg)">WIN x2</div>
+                <div class="wheel-sector" style="transform: rotate(67.5deg)">ПУСТО</div>
+                <div class="wheel-sector" style="transform: rotate(112.5deg)">WIN x2</div>
+                <div class="wheel-sector" style="transform: rotate(157.5deg)">ПУСТО</div>
+                <div class="wheel-sector" style="transform: rotate(202.5deg)">WIN x2</div>
+                <div class="wheel-sector" style="transform: rotate(247.5deg)">ПУСТО</div>
+                <div class="wheel-sector" style="transform: rotate(292.5deg)">WIN x2</div>
+                <div class="wheel-sector" style="transform: rotate(337.5deg)">ПУСТО</div>
             </div>
-            <div class="btn" onclick="changeCurrency()">🔄 ВАЛЮТА (<span id="cur-btn">UAH</span>)</div>
-            <button class="btn" style="background:none; color:var(--mc)" onclick="showSub('menu-home')">← НАЗАД</button>
         </div>
-
-        <div id="design" class="sub-panel">
-            <h3>ЦВЕТ МЕНЮ</h3>
-            <div class="grid-select">
-                <div class="sq-btn" style="background:#ffd700" onclick="setT('#ffd700')"></div>
-                <div class="sq-btn" style="background:#ff3333" onclick="setT('#ff3333')"></div>
-                <div class="sq-btn" style="background:#00ccff" onclick="setT('#00ccff')"></div>
-                <div class="sq-btn" style="background:#22ff22" onclick="setT('#22ff22')"></div>
-                <div class="sq-btn" style="background:#ffffff" onclick="setT('#ffffff')"></div>
-                <div class="sq-btn" style="background:#aa00ff" onclick="setT('#aa00ff')"></div>
-            </div>
-            <h3>ЭФФЕКТЫ</h3>
-            <div class="grid-select">
-                <div class="sq-btn" onclick="setE('🌸')">🌸</div>
-                <div class="sq-btn" onclick="setE('💰')">💰</div>
-                <div class="sq-btn" onclick="setE('❄️')">❄️</div>
-                <div class="sq-btn" onclick="setE('⭐')">⭐</div>
-                <div class="sq-btn" onclick="stopE()">❌</div>
-            </div>
-            <button class="btn" style="background:#333; color:#fff" onclick="showSub('menu-home')">НАЗАД</button>
+        <div class="card">
+            <p style="margin:0; opacity:0.6">ВАША СТАВКА:</p>
+            <input type="number" id="w-bet" class="inp" value="10">
+            <button class="btn" id="w-btn" onclick="playWheel()">КРУТИТЬ</button>
         </div>
+        <button class="btn" style="background:#333; color:#fff" onclick="closeP()">НАЗАД</button>
     </div>
 
-    <div id="settings-panel" class="panel">
-        <h3>НАСТРОЙКИ</h3>
-        <div class="card">ЯЗЫК: РУССКИЙ 🇷🇺</div>
-        <button class="btn" onclick="closePanels()">ЗАКРЫТЬ</button>
+    <div id="menu-l" class="panel left">
+        <div class="card">
+            <h2 id="u-name">Игрок</h2>
+            <p>ID: <span id="u-id">000</span></p>
+        </div>
+        <button class="btn" onclick="resetBal()">СБРОСИТЬ БАЛАНС (100)</button>
+        <button class="btn" style="background:#333; color:#fff" onclick="closeP()">ЗАКРЫТЬ</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let bal = 10.0;
-        let cur = "UAH";
-        let effectInterval;
+        let bal = 0;
 
-        function update() {
-            document.getElementById('bal-val').innerText = bal.toFixed(2);
-            document.getElementById('cur-val').innerText = cur;
-            document.getElementById('cur-btn').innerText = cur;
+        function saveData() { localStorage.setItem('gb_bal', bal); }
+        function loadData() {
+            bal = parseFloat(localStorage.getItem('gb_bal'));
+            if (isNaN(bal)) bal = 100.0;
+            updateUI();
         }
 
-        function msg(t) {
-            let b = document.getElementById('toast');
-            b.innerText = t; b.style.display = 'block';
-            setTimeout(() => b.style.display = 'none', 2000);
+        function updateUI() { document.getElementById('bal').innerText = bal.toFixed(2); }
+        function openP(id) { 
+            document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
+            let el = document.getElementById(id); el.style.display='block';
+            setTimeout(() => el.classList.add('active'), 10);
         }
-
-        function openPanel(id) {
-            closePanels();
-            document.getElementById(id).classList.add('active');
-        }
-
-        function closePanels() {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        }
-
-        function showSub(id) {
-            document.querySelectorAll('.sub-panel').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
-        function changeCurrency() {
-            if(cur === "UAH") { cur = "RUB"; bal *= 2.3; }
-            else if(cur === "RUB") { cur = "TON"; bal /= 500; }
-            else { cur = "UAH"; bal = 10.0; }
-            update();
-            msg("Валюта изменена");
-        }
-
-        function setT(c) { document.documentElement.style.setProperty('--mc', c); }
-
-        function setE(emoji) {
-            stopE();
-            effectInterval = setInterval(() => {
-                const p = document.createElement('div');
-                p.className = 'particle'; p.innerText = emoji;
-                p.style.left = Math.random() * 100 + 'vw';
-                p.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                document.body.appendChild(p);
-                setTimeout(() => p.remove(), 4000);
-            }, 500);
-        }
-
-        function stopE() { if(effectInterval) clearInterval(effectInterval); }
+        function closeP() { document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); }
+        function msg(t) { let b = document.getElementById('toast'); b.innerText = t; b.style.display = 'block'; setTimeout(() => b.style.display = 'none', 2000); }
 
         function playWheel() {
-            if(bal < 5) return msg("МАЛО СРЕДСТВ");
+            let bet = parseFloat(document.getElementById('w-bet').value);
+            if(bal < bet || bet <= 0) return msg("МАЛО СРЕДСТВ");
+            
             let btn = document.getElementById('w-btn');
             if(btn.disabled) return;
-            bal -= 5; update(); btn.disabled = true;
-
-            let w = document.getElementById('wheel-obj');
-            let isWin = Math.random() < 0.25;
-            let deg = isWin ? 3600 : (3600 + 90 + Math.floor(Math.random()*3)*90);
             
-            w.style.transform = `rotate(${deg}deg)`;
+            bal -= bet; updateUI(); saveData();
+            btn.disabled = true;
+
+            let w = document.getElementById('w-obj');
+            let isWin = Math.random() < 0.5; // 50% шанс (4 из 8)
+            
+            // Выбираем один из 4 победных или 4 пустых секторов
+            let sectors = isWin ? [22.5, 112.5, 202.5, 292.5] : [67.5, 157.5, 247.5, 337.5];
+            let targetAngle = sectors[Math.floor(Math.random()*sectors.length)];
+            
+            // Крутим минимум 5 оборотов (1800 град) + попадаем в сектор
+            // Вычитаем targetAngle из 3600, так как вращение идет по часовой, а сектора считаются против
+            let finalDeg = 3600 - targetAngle; 
+            
+            w.style.transform = `rotate(${finalDeg}deg)`;
 
             setTimeout(() => {
                 w.style.transition = 'none';
-                w.style.transform = `rotate(${deg % 360}deg)`;
+                w.style.transform = `rotate(${finalDeg % 360}deg)`;
                 setTimeout(() => w.style.transition = 'transform 4s cubic-bezier(0.15, 0, 0.15, 1)', 50);
                 
-                if(isWin) { bal += 10; msg("ПОБЕДА x2!"); }
-                else { msg("ВЫ ПРОИГРАЛИ"); }
-                update();
+                if(isWin) {
+                    bal += bet * 2;
+                    msg("ПОБЕДА x2!");
+                } else {
+                    msg("ПРОИГРЫШ");
+                }
+                updateUI(); saveData();
                 btn.disabled = false;
             }, 4100);
         }
 
+        function resetBal() { bal = 100.0; saveData(); updateUI(); msg("Баланс 100 UAH"); }
+
         window.onload = () => {
-            document.getElementById('u-name').innerText = tg.initDataUnsafe.user?.first_name || "Игрок";
-            document.getElementById('u-id').innerText = tg.initDataUnsafe.user?.id || "654321";
             tg.expand();
-            update();
+            document.getElementById('u-name').innerText = tg.initDataUnsafe.user?.first_name || "Gamer";
+            loadData();
         };
     </script>
 </body>
