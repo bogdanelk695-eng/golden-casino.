@@ -5,111 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --mc: #ffd700; --bg: #0b0b0b; --card: rgba(255,255,255,0.07); }
+        :root { --gold: #ffd700; --bg: #0b0b0b; }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; outline: none; user-select: none; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
         
-        /* ЭФФЕКТЫ ЧАСТИЦ */
-        #fx-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-        .particle { position: absolute; top: -50px; animation: fall linear infinite; z-index: 1; font-size: 20px; }
+        /* ЭФФЕКТЫ МОНЕТ */
+        #fx-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .coin { position: absolute; top: -50px; animation: fall linear infinite; font-size: 20px; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
 
-        /* ЗАСТАВКА */
-        #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.8s; }
-        .loader { width: 40px; height: 40px; border: 3px solid #222; border-top: 3px solid var(--mc); border-radius: 50%; animation: spin 1s linear infinite; margin-top: 15px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
         /* ИНТЕРФЕЙС */
-        .wrapper { position: relative; z-index: 10; display: flex; flex-direction: column; height: 100vh; }
-        .header { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--mc); }
-        .main { text-align: center; padding-top: 50px; flex-grow: 1; }
-        .bal-val { font-size: 50px; font-weight: 900; color: var(--mc); text-shadow: 0 0 20px rgba(255,215,0,0.4); }
+        .ui { position: relative; z-index: 10; display: flex; flex-direction: column; height: 100vh; }
+        .header { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; background: #000; border-bottom: 2px solid var(--gold); }
+        .main { text-align: center; padding-top: 40px; flex-grow: 1; }
+        .balance-box { font-size: 50px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(255,215,0,0.5); }
 
-        /* МЕНЮ И ОКНА */
-        .side { position: fixed; top: 0; width: 80%; height: 100%; background: #111; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 70px 20px; box-shadow: 0 0 40px #000; }
-        .side-l { left: -100%; border-right: 2px solid var(--mc); }
-        .side-r { right: -100%; border-left: 2px solid var(--mc); }
+        /* БОКОВЫЕ ПАНЕЛИ */
+        .side { position: fixed; top: 0; width: 80%; height: 100%; background: #111; z-index: 1000; transition: 0.4s; padding: 70px 20px; box-shadow: 5px 0 30px #000; }
+        .side-l { left: -100%; border-right: 2px solid var(--gold); }
+        .side-r { right: -100%; border-left: 2px solid var(--gold); }
         .side.active { left: 0; } .side-r.active { right: 0; }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; padding: 20px; }
-        .modal.active { display: flex; opacity: 1; }
-        .m-cont { background: #181818; width: 100%; max-width: 400px; border-radius: 30px; border: 1px solid var(--mc); padding: 25px; position: relative; box-shadow: 0 0 30px rgba(255,215,0,0.1); }
+        /* МОДАЛЬНЫЕ ОКНА (НАКЛАДЫВАЮТСЯ) */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .m-content { background: #1a1a1a; width: 100%; border-radius: 25px; border: 1px solid var(--gold); padding: 25px; position: relative; box-shadow: 0 0 40px rgba(255,215,0,0.1); }
 
         /* КНОПКИ */
-        .btn { background: var(--mc); color: #000; border: none; padding: 16px; border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; transition: 0.2s; font-size: 14px; margin-bottom: 10px; }
+        .btn { background: var(--gold); color: #000; border: none; padding: 16px; border-radius: 12px; font-weight: 900; width: 100%; cursor: pointer; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; }
         .btn:active { transform: scale(0.95); }
-        .btn-black { background: #222; color: #fff; }
-        .card { background: var(--card); border-radius: 15px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--mc); }
-        .inp { background: #000; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; width: 100%; margin: 10px 0; text-align: center; font-size: 18px; }
+        .btn-dark { background: #222; color: #fff; }
+        .card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--gold); }
+        .inp { background: #000; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; width: 100%; text-align: center; margin: 10px 0; font-size: 18px; }
 
         /* КОЛЕСО */
-        .w-box { position: relative; width: 220px; height: 220px; margin: 15px auto; }
-        .w-body { width: 100%; height: 100%; border: 4px solid var(--mc); border-radius: 50%; position: relative; transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); background: #000; overflow: hidden; }
-        .w-line { position: absolute; width: 2px; height: 50%; background: var(--mc); left: 50%; transform-origin: bottom center; opacity: 0.3; }
-        .w-sec { position: absolute; width: 100%; height: 100%; text-align: center; font-size: 9px; font-weight: 900; padding-top: 15px; color: var(--mc); }
+        .w-wrap { position: relative; width: 230px; height: 230px; margin: 10px auto; }
+        .w-body { width: 100%; height: 100%; border: 4px solid var(--gold); border-radius: 50%; position: relative; transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); background: #000; overflow: hidden; }
+        .w-sec { position: absolute; width: 100%; height: 100%; text-align: center; font-size: 10px; font-weight: 900; padding-top: 15px; color: var(--gold); }
+        .w-line { position: absolute; width: 2px; height: 50%; background: var(--gold); left: 50%; transform-origin: bottom center; opacity: 0.3; }
         .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #f00; font-size: 30px; z-index: 10; }
-
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 12px 30px; border-radius: 30px; font-weight: 900; display: none; z-index: 9999; }
     </style>
 </head>
 <body>
 
-    <div id="splash">
-        <h1 style="color:var(--mc); letter-spacing:8px; margin:0">GOLDEN</h1>
-        <div class="loader"></div>
-    </div>
+    <div id="fx-layer"></div>
 
-    <div id="fx-canvas"></div>
-    <div id="toast"></div>
-
-    <div class="wrapper">
+    <div class="ui">
         <div class="header">
-            <div onclick="toggle('side-l')" style="font-size:30px">☰</div>
+            <div onclick="toggleSide('side-l')" style="font-size:30px">☰</div>
             <div style="font-weight:900; letter-spacing:2px">GOLDEN BOT</div>
-            <div onclick="toggle('side-r')" style="font-size:25px">⚙️</div>
+            <div onclick="toggleSide('side-r')" style="font-size:25px">⚙️</div>
         </div>
 
         <div class="main">
-            <div style="opacity:0.5; font-size:12px; letter-spacing:2px">ACCOUNT BALANCE</div>
-            <div class="bal-val"><span id="b-main">100.00</span> <small id="c-main" style="font-size:20px">UAH</small></div>
-            <div style="padding: 50px 25px;">
-                <button class="btn" style="height:70px; font-size:20px" onclick="showM('m-games')">🕹️ PLAY NOW</button>
-                <button class="btn btn-black" onclick="showM('m-dep')">💳 REFILL</button>
+            <div style="opacity:0.5; font-size:12px">ВАШ БАЛАНС</div>
+            <div class="balance-box"><span id="bal-val">100.00</span> <small id="cur-txt" style="font-size:20px">UAH</small></div>
+            <div style="padding: 40px 20px;">
+                <button class="btn" style="height:70px; font-size:18px" onclick="openMod('m-games')">🎮 ИГРАТЬ</button>
+                <button class="btn btn-dark" onclick="openMod('m-dep')">💳 ПОПОЛНИТЬ</button>
             </div>
         </div>
     </div>
 
     <div id="side-l" class="side side-l">
         <div class="card">
-            <h3 id="u-name" style="margin:0">Gamer</h3>
-            <p style="opacity:0.5; font-size:11px">ID: <span id="u-id">0000</span></p>
+            <h3 id="u-name" style="margin:0">Загрузка...</h3>
+            <p style="opacity:0.5; font-size:12px">ID: <span id="u-id">0</span></p>
         </div>
-        <button class="btn" onclick="showM('m-games')">🎮 GAMES</button>
-        <button class="btn" onclick="showM('m-promo')">🎁 PROMO</button>
-        <button class="btn" onclick="showM('m-support')">🆘 SUPPORT</button>
-        <button class="btn btn-black" onclick="toggle('side-l')">CLOSE</button>
+        <button class="btn" onclick="openMod('m-profile')">👤 ПРОФИЛЬ</button>
+        <button class="btn" onclick="openMod('m-promo')">🎁 ПРОМОКОДЫ</button>
+        <button class="btn" onclick="window.open('https://t.me/your_admin')">🆘 ПОДДЕРЖКА</button>
+        <button class="btn btn-dark" onclick="toggleSide('side-l')">ЗАКРЫТЬ</button>
     </div>
 
     <div id="side-r" class="side side-r">
-        <h3 style="text-align:center">SETTINGS</h3>
-        <p style="font-size:12px; opacity:0.6">SELECT CURRENCY:</p>
-        <button class="btn" onclick="setCur('UAH')">🇺🇦 UAH (₴)</button>
-        <button class="btn" onclick="setCur('RUB')">🇷🇺 RUB (₽)</button>
-        <button class="btn btn-black" style="margin-top:20px" onclick="toggle('side-r')">CLOSE</button>
+        <h3 style="text-align:center">НАСТРОЙКИ</h3>
+        <p>Выберите валюту:</p>
+        <button class="btn" onclick="changeCur('UAH')">🇺🇦 ГРИВНА (UAH)</button>
+        <button class="btn" onclick="changeCur('RUB')">🇷🇺 РУБЛЬ (RUB)</button>
+        <button class="btn btn-dark" onclick="toggleSide('side-r')">ЗАКРЫТЬ</button>
+    </div>
+
+    <div id="m-profile" class="modal">
+        <div class="m-content">
+            <h2 style="text-align:center">МОЙ ПРОФИЛЬ</h2>
+            <div class="card">Текущий баланс: <span class="bal-display">100</span> <span class="cur-display">UAH</span></div>
+            <button class="btn" onclick="openMod('m-dep')">ПОПОЛНИТЬ</button>
+            <button class="btn btn-dark" onclick="closeMod()">НАЗАД</button>
+        </div>
     </div>
 
     <div id="m-games" class="modal">
-        <div class="m-cont">
-            <h2 style="text-align:center; color:var(--mc)">CASINO LOBBY</h2>
-            <button class="btn" onclick="showM('g-slots')">🎰 SLOTS MACHINE</button>
-            <button class="btn" onclick="showM('g-wheel')">🎡 WHEEL OF LUCK</button>
-            <button class="btn btn-black" onclick="hide()">BACK</button>
+        <div class="m-content">
+            <h2 style="text-align:center">ИГРЫ</h2>
+            <button class="btn" onclick="openMod('g-slots')">🎰 АВТОМАТ</button>
+            <button class="btn" onclick="openMod('g-wheel')">🎡 КОЛЕСО ФОРТУНЫ</button>
+            <button class="btn btn-dark" onclick="closeMod()">ВЫЙТИ</button>
         </div>
     </div>
 
     <div id="g-wheel" class="modal">
-        <div class="m-cont">
-            <div class="w-box">
+        <div class="m-content">
+            <div class="w-wrap">
                 <div class="pointer">▼</div>
                 <div id="w-obj" class="w-body">
                     <div class="w-line" style="transform:rotate(45deg)"></div>
@@ -120,126 +117,137 @@
                     <div class="w-line" style="transform:rotate(270deg)"></div>
                     <div class="w-line" style="transform:rotate(315deg)"></div>
                     <div class="w-sec" style="transform:rotate(22.5deg)">WIN x2</div>
-                    <div class="w-sec" style="transform:rotate(67.5deg)">EMPTY</div>
+                    <div class="w-sec" style="transform:rotate(67.5deg)">ПУСТО</div>
                     <div class="w-sec" style="transform:rotate(112.5deg)">WIN x2</div>
-                    <div class="w-sec" style="transform:rotate(157.5deg)">EMPTY</div>
+                    <div class="w-sec" style="transform:rotate(157.5deg)">ПУСТО</div>
                     <div class="w-sec" style="transform:rotate(202.5deg)">WIN x2</div>
-                    <div class="w-sec" style="transform:rotate(247.5deg)">EMPTY</div>
+                    <div class="w-sec" style="transform:rotate(247.5deg)">ПУСТО</div>
                     <div class="w-sec" style="transform:rotate(292.5deg)">WIN x2</div>
-                    <div class="w-sec" style="transform:rotate(337.5deg)">EMPTY</div>
+                    <div class="w-sec" style="transform:rotate(337.5deg)">ПУСТО</div>
                 </div>
             </div>
             <input type="number" id="w-bet" class="inp" value="10">
-            <button class="btn" id="w-btn" onclick="playW()">SPIN</button>
-            <button class="btn btn-black" onclick="showM('m-games')">BACK</button>
+            <button class="btn" id="w-btn" onclick="playW()">КРУТИТЬ</button>
+            <button class="btn btn-dark" onclick="openMod('m-games')">НАЗАД</button>
         </div>
     </div>
 
     <div id="g-slots" class="modal">
-        <div class="m-cont" style="text-align:center">
-            <h3>🎰 SLOTS</h3>
-            <div id="s-res" style="font-size:45px; margin:25px; background:#000; padding:15px; border-radius:15px; border:1px dashed var(--mc)">🎰🎰🎰</div>
+        <div class="m-content" style="text-align:center">
+            <h3>🎰 АВТОМАТ</h3>
+            <div id="s-res" style="font-size:45px; margin:20px; background:#000; border-radius:10px; padding:10px; border:1px solid var(--gold)">🎰🎰🎰</div>
             <input type="number" id="s-bet" class="inp" value="10">
-            <button class="btn" id="s-btn" onclick="playS()">START GAME</button>
-            <button class="btn btn-black" onclick="showM('m-games')">BACK</button>
+            <button class="btn" onclick="playS()">ИГРАТЬ (X2)</button>
+            <button class="btn btn-dark" onclick="openMod('m-games')">НАЗАД</button>
         </div>
     </div>
 
     <div id="m-dep" class="modal">
-        <div class="m-cont">
-            <h3>REFILL BALANCE</h3>
-            <div class="card" style="font-size:10px; word-break:break-all">
-                TON WALLET:<br><b style="color:var(--mc)">UQBXsDXoFMFD3752_K-87KOPztj5KbTrQq9irD32bUEAMQ3L</b>
-            </div>
-            <button class="btn" onclick="copy()">COPY ADDRESS</button>
-            <button class="btn btn-black" onclick="hide()">CLOSE</button>
+        <div class="m-content">
+            <h3>ПОПОЛНЕНИЕ</h3>
+            <p style="font-size:12px">ТОН-КОШЕЛЕК:</p>
+            <div class="card" style="font-size:10px; word-break:break-all">UQBXsDXoFMFD3752_K-87KOPztj5KbTrQq9irD32bUEAMQ3L</div>
+            <button class="btn" onclick="alert('Адрес скопирован!')">КОПИРОВАТЬ АДРЕС</button>
+            <button class="btn btn-dark" onclick="closeMod()">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let bal = parseFloat(localStorage.getItem('g_bal')) || 100.0;
+        let balUah = parseFloat(localStorage.getItem('g_bal')) || 100.0;
         let cur = localStorage.getItem('g_cur') || 'UAH';
         const rate = 2.5;
 
-        function save() { localStorage.setItem('g_bal', bal); localStorage.setItem('g_cur', cur); }
-        function update() {
-            let d = (cur === 'UAH') ? bal : bal * rate;
-            document.getElementById('b-main').innerText = d.toFixed(2);
-            document.getElementById('c-main').innerText = cur;
+        function save() { localStorage.setItem('g_bal', balUah); localStorage.setItem('g_cur', cur); }
+        
+        function updateUI() {
+            let dBal = (cur === 'UAH') ? balUah : balUah * rate;
+            document.getElementById('bal-val').innerText = dBal.toFixed(2);
+            document.getElementById('cur-txt').innerText = cur;
+            document.querySelectorAll('.bal-display').forEach(e => e.innerText = dBal.toFixed(2));
+            document.querySelectorAll('.cur-display').forEach(e => e.innerText = cur);
         }
 
-        function toggle(id) { document.getElementById(id).classList.toggle('active'); }
-        function showM(id) {
-            hide();
-            let m = document.getElementById(id); m.style.display = 'flex';
+        function toggleSide(id) { document.getElementById(id).classList.toggle('active'); }
+        
+        function openMod(id) {
+            closeMod();
+            let m = document.getElementById(id);
+            m.style.display = 'flex';
             setTimeout(() => m.classList.add('active'), 10);
-            document.querySelectorAll('.side').forEach(s => s.classList.remove('active'));
-        }
-        function hide() {
-            document.querySelectorAll('.modal').forEach(m => { m.classList.remove('active'); setTimeout(() => m.style.display = 'none', 300); });
+            document.getElementById('side-l').classList.remove('active');
+            document.getElementById('side-r').classList.remove('active');
         }
 
-        function setCur(c) { cur = c; save(); update(); toggle('side-r'); spawnFx(); }
+        function closeMod() {
+            document.querySelectorAll('.modal').forEach(m => {
+                m.classList.remove('active');
+                setTimeout(() => m.style.display = 'none', 300);
+            });
+        }
 
-        // ЭФФЕКТЫ ЧАСТИЦ
-        function spawnFx() {
-            const container = document.getElementById('fx-canvas');
-            const emoji = (cur === 'UAH') ? '💵' : '💰';
-            for(let i=0; i<15; i++) {
+        function changeCur(c) { cur = c; save(); updateUI(); toggleSide('side-r'); }
+
+        function spawnCoins() {
+            const container = document.getElementById('fx-layer');
+            for(let i=0; i<10; i++) {
                 setTimeout(() => {
-                    const p = document.createElement('div');
-                    p.className = 'particle'; p.innerText = emoji;
-                    p.style.left = Math.random() * 100 + 'vw';
-                    p.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                    container.appendChild(p);
-                    setTimeout(() => p.remove(), 4000);
-                }, i * 300);
+                    const c = document.createElement('div');
+                    c.className = 'coin'; c.innerText = '🟡';
+                    c.style.left = Math.random() * 100 + 'vw';
+                    c.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    container.appendChild(c);
+                    setTimeout(() => c.remove(), 4000);
+                }, i * 400);
             }
         }
 
         function playW() {
-            let bRaw = parseFloat(document.getElementById('w-bet').value);
-            let bUah = (cur === 'UAH') ? bRaw : bRaw / rate;
-            if(bal < bUah) return alert("Low balance!");
-            bal -= bUah; update(); save();
+            let betRaw = parseFloat(document.getElementById('w-bet').value);
+            let betUah = (cur === 'UAH') ? betRaw : betRaw / rate;
+            if(balUah < betUah) return alert("Недостаточно денег!");
+            
+            balUah -= betUah; updateUI(); save();
+            let btn = document.getElementById('w-btn'); btn.disabled = true;
+
             let win = Math.random() < 0.5;
             let deg = 3600 + (win ? 22.5 : 67.5);
             document.getElementById('w-obj').style.transform = `rotate(${deg}deg)`;
+
             setTimeout(() => {
-                if(win) { bal += bUah * 2; alert("WIN X2!"); spawnFx(); } else { alert("LOSE"); }
-                update(); save();
+                btn.disabled = false;
+                if(win) { balUah += betUah * 2; alert("ПОБЕДА!"); spawnCoins(); } else { alert("ПРОИГРЫШ"); }
+                updateUI(); save();
+                document.getElementById('w-obj').style.transition = 'none';
+                document.getElementById('w-obj').style.transform = `rotate(${deg%360}deg)`;
+                setTimeout(() => document.getElementById('w-obj').style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.1, 1)', 50);
             }, 4100);
         }
 
         function playS() {
-            let bRaw = parseFloat(document.getElementById('s-bet').value);
-            let bUah = (cur === 'UAH') ? bRaw : bRaw / rate;
-            if(bal < bUah) return alert("Low balance!");
-            bal -= bUah; update(); save();
-            let i = 0; const s = ['💎','🍒','7️⃣','🔔','🍀'];
+            let betRaw = parseFloat(document.getElementById('s-bet').value);
+            let betUah = (cur === 'UAH') ? betRaw : betRaw / rate;
+            if(balUah < betUah) return alert("Недостаточно денег!");
+            balUah -= betUah; updateUI(); save();
+
+            let i = 0; const syms = ['💎','🍒','7️⃣','🔔','🍀'];
             const t = setInterval(() => {
-                document.getElementById('s-res').innerText = s[Math.floor(Math.random()*5)]+s[Math.floor(Math.random()*5)]+s[Math.floor(Math.random()*5)];
+                document.getElementById('s-res').innerText = syms[Math.floor(Math.random()*5)]+syms[Math.floor(Math.random()*5)]+syms[Math.floor(Math.random()*5)];
                 if(++i > 15) {
                     clearInterval(t);
-                    if(Math.random() < 0.2) { bal += bUah*2; alert("WIN!"); spawnFx(); } else { alert("LOSE"); }
-                    update(); save();
+                    if(Math.random() < 0.3) { balUah += betUah * 2; alert("ВЫИГРЫШ!"); spawnCoins(); } else { alert("ПРОИГРЫШ"); }
+                    updateUI(); save();
                 }
             }, 100);
         }
 
-        function copy() { navigator.clipboard.writeText('UQBXsDXoFMFD3752_K-87KOPztj5KbTrQq9irD32bUEAMQ3L'); alert("Copied!"); }
-
         window.onload = () => {
             tg.expand();
-            document.getElementById('u-name').innerText = tg.initDataUnsafe.user?.first_name || "Gamer";
-            update(); spawnFx();
-            setTimeout(() => {
-                document.getElementById('splash').style.opacity = '0';
-                setTimeout(() => document.getElementById('splash').style.display = 'none', 800);
-            }, 2000);
+            document.getElementById('u-name').innerText = tg.initDataUnsafe.user?.first_name || "Игрок";
+            document.getElementById('u-id').innerText = tg.initDataUnsafe.user?.id || "777";
+            updateUI();
+            spawnCoins();
         };
     </script>
 </body>
-    </html>
-    
+</html>
