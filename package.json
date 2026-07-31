@@ -1,7 +1,7 @@
 {
-  "name": "hamster-tap",
+  "name": "hamster-tap-telegram",
   "version": "1.0.0",
-  "description": "Hamster Tap Game",
+  "description": "Hamster Tap Telegram Mini App",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
